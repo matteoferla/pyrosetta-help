@@ -57,6 +57,9 @@ Given a list of mutants and pose, score them. scorefunction terms, interface, mo
     import pandas as pd
     scores = pd.DataFrame(data)
     
+Additionally, `MutantScorer.term_meanings` is a handy dictionary to convert a score term name into a description.
+Taken from Rosetta documentations, with some edits on some terms.
+    
 ## Blueprinter
 
 A key component of using Remodel is a blueprint.
