@@ -1,10 +1,10 @@
-# mixins
-from ._init import BlueprinterInit
-from ._common import BlueprinterCommon
-from ._subscripted import BlueprinterSubscripted
+# mixin classes are private
+from ._init import BlueprinterInit as _Init
+from ._common import BlueprinterCommon as _Common
+from ._subscripted import BlueprinterSubscripted as _Subscripted
+from ._expected import BlueprinterExpected as _Expected
 
-
-class Blueprinter(BlueprinterInit, BlueprinterSubscripted, BlueprinterCommon):
+class Blueprinter(_Init, _Subscripted, _Common, _Expected):
     """
     Make a blueprint file for Rosetta Remodel and load it into the options (``.set(fn)``).
     The rows property is a list of lists, this is what the operations manipulate.
@@ -50,4 +50,8 @@ class Blueprinter(BlueprinterInit, BlueprinterSubscripted, BlueprinterCommon):
     # === common operations =============================================
     # from BlueprinterCommon
     # adds some common tasks
+
+    # === expected  =============================================
+    # from BlueprinterExpected
+    # adds expected_seq dynamic property
 
