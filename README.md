@@ -27,7 +27,7 @@ This just converts the key:value pairs to a command line string for the pyrosett
     
     # capture to log
     logger = get_logger()
-    # give CLI attributes as a civilised way
+    # give CLI attributes in a civilised way
     pyrosetta.distributed.maybe_init(extra_options=make_option_string(no_optH=False,
                                                     ex1=None,
                                                     ex2=None,
