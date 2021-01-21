@@ -72,4 +72,20 @@ This module makes a blueprint. See doc string of class `Blueprinter` in [bluepri
     blue[20:25] = 'NATAA' # following loop
     blue[22] = 'PIKAA W'                            
     
+## ChainOps
 
+This class works around a list of dict that contain details of each chain in an model. The key keys are:
+
+* number (pose chain number)
+* chain (PDB chain letter)
+* gene_name (gene name)
+
+the instance can be subscripted with any of those three, returning the dict of that chain.
+To get a single chain pose:
+
+    chain_pose = chain_ops.get_pose_of_chain(pose, 'B')
+
+Transmogrifer/Murinizer deals with alignments between species.
+The RosettaCM stuff is elsewhere. To do: MOVE OVER
+
+The chain details started off by themselves, see [metadata_assembly notes](metadata_assembly.md)
