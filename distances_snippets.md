@@ -62,6 +62,38 @@ To get a long-form pandas DataFrame using a ChainOps object:
     import pandas as pd
 
     distances = [(first['gene_name'], second['gene_name'], mindist_bewteen_chains(pose, first, second)) for first, second in itertools.combinations(chain_ops.chains, 2)]
-    distatable = pd.DataFrame(distances)
+    distatable = pd.DataFrame(distances, columns=['protein_A', 'protein_B', 'distance'])
+    distatable.to_csv('distances_long.csv')
     
-NB. remember humans like wide-form DataFrames!
+Humans and heatplots like wide-form DataFrames:
+    
+    wide = pd.concat([pd.DataFrame(distances, columns=['protein_A', 'protein_B', 'distance']),
+                 pd.DataFrame(distances, columns=['protein_B', 'protein_A', 'distance'])])\
+                .pivot(index='protein_A', columns='protein_B', values='distance')\
+                .round(1)
+    wide[wide.isna()] = 0
+    wide.to_csv('distances_wide.csv')
+    
+Picture
+
+    dm = dist.values
+    dm[dm > 10] = 10
+    dm[dm == 0] = float('nan')
+
+    fig = go.Figure(data=go.Heatmap(
+                        x=dist.columns,
+                        y=dist.index.to_series(),
+                        z=dm,
+                        colorscale=[(0, 'green'), (1, 'white')]),
+                    layout=go.Layout(title='distances of chains',
+                                    xaxis = dict(tickangle=35,
+                                                showticklabels=True,
+                                                 dtick=1,
+                                                type='category'),
+                                    yaxis = dict(showticklabels=True,
+                                                 dtick=1,
+                                                type='category')
+                                    ))
+    #fig = px.imshow(dist)
+    fig.show()
+

@@ -89,3 +89,11 @@ Transmogrifer/Murinizer deals with alignments between species.
 The RosettaCM stuff is elsewhere. To do: MOVE OVER
 
 The chain details started off by themselves, see [metadata_assembly notes](metadata_assembly.md)
+
+## Other snippets
+
+These could quickly be made into classes... but hey
+
+* [pyrosetta and pandas](pandas_snippets.md)
+* [phoshosite plus to pyrosetta](phospho_snippets.md)
+* [distance matrix of chains](distances_snippets.md)
