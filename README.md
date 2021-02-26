@@ -44,7 +44,7 @@ This just converts the key:value pairs to a command line string for the pyrosett
 
 Given a list of mutants and pose, score them. scorefunction terms, interface, movement etc.
 
-    from score_mutants import MutantScorer
+    from score_mutants import MutantScorer, Mutation, extend_scores, term_meanings
     model = MutantScorer(pose, modelname='test')
     model.scorefxn = pyrosetta.create_score_function('ref2015')
     model.strict_about_starting_residue = True
@@ -56,8 +56,12 @@ Given a list of mutants and pose, score them. scorefunction terms, interface, mo
                                 cycles=5)
     import pandas as pd
     scores = pd.DataFrame(data)
+    extend_scores(scores)
     
-Additionally, `MutantScorer.term_meanings` is a handy dictionary to convert a score term name into a description.
+The function `extend_scores` adds 6 columns, specifying which terms is the biggest changer.
+It uses `term_meanings`, which is a handy dictionary to convert a score term name into a description.
+E.g. converts "fa_atr" -> "Lennard-Jones attractive between atoms 
+in different residues (r^6 term, London dispersion forces)." etc.
 Taken from Rosetta documentations, with some edits on some terms.
     
 ## Blueprinter
@@ -94,6 +98,5 @@ The chain details started off by themselves, see [metadata_assembly notes](metad
 
 These could quickly be made into classes... but hey
 
-* [pyrosetta and pandas](pandas_snippets.md)
 * [phoshosite plus to pyrosetta](phospho_snippets.md)
 * [distance matrix of chains](distances_snippets.md)
