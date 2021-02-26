@@ -52,20 +52,25 @@ class BlueprinterSubscripted:
         :param idx:
         :return:
         """
+        deleted = []
         if isinstance(idx, int):
             row = self[idx]
+            deleted.append(row.copy())
             del row[:]
         elif isinstance(idx, slice):
             for row in self[idx]:
+                deleted.append(row.copy())
                 del row[:]
         else:
             raise TypeError(f'Expected int or slice, got a {type(idx)}')
+        return deleted
 
+    @property
     def max(self):
         """
-        :return: Highest pose index
+        :return: Highest pose index (this is different from the number of lines due to indels)
         """
-        return [int(row[0]) for row in self]
+        return [int(row[-1]) for row in self]
 
     def insert(self, idx: int, value: Union[str, List[str]], before: bool = True):
         """
@@ -97,7 +102,7 @@ class BlueprinterSubscripted:
         # wobble sides
         if before:
             other_idx = idx - 1
-        elif self.max() >= idx + 1:
+        elif self.max >= idx + 1:
             other_idx = idx + 1
         else:
             other_idx = idx  # does nothing.
@@ -110,6 +115,12 @@ class BlueprinterSubscripted:
 
     def insert_after(self, idx: int, value: Union[str, List[str]]):
         self.insert(idx, value, before=False)
+
+    def prepend(self, value: Union[str, List[str]]):
+        self.insert(1, value, before=True)
+
+    def append(self, value: Union[str, List[str]]):
+        self.insert(self.max, value, before=False)
 
     # ===== output ==============================
 

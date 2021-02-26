@@ -23,15 +23,15 @@ This just converts the key:value pairs to a command line string for the pyrosett
 
 
     import pyrosetta
-    from pyrosetta_help.init_ops import make_option_string, get_logger
+    from pyrosetta_help.init_ops import make_option_string, configure_logger
     
     # capture to log
-    logger = get_logger()
+    logger = configure_logger()
     # give CLI attributes in a civilised way
     pyrosetta.distributed.maybe_init(extra_options=make_option_string(no_optH=False,
                                                     ex1=None,
                                                     ex2=None,
-                                                    mute='all',
+                                                    #mute='all',
                                                     ignore_unrecognized_res=True,
                                                     load_PDB_components=False,
                                                     ignore_waters=False)
