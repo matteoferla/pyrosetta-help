@@ -23,7 +23,7 @@ This just converts the key:value pairs to a command line string for the pyrosett
 
 
     import pyrosetta
-    from init_helper import make_option_string, get_logger
+    from pyrosetta_help.init_ops import make_option_string, get_logger
     
     # capture to log
     logger = get_logger()
@@ -44,7 +44,7 @@ This just converts the key:value pairs to a command line string for the pyrosett
 
 Given a list of mutants and pose, score them. scorefunction terms, interface, movement etc.
 
-    from score_mutants import MutantScorer, Mutation, extend_scores, term_meanings
+    from pyrosetta_help.score_mutants import MutantScorer, Mutation, extend_scores, term_meanings
     model = MutantScorer(pose, modelname='test')
     model.scorefxn = pyrosetta.create_score_function('ref2015')
     model.strict_about_starting_residue = True
@@ -67,9 +67,9 @@ Taken from Rosetta documentations, with some edits on some terms.
 ## Blueprinter
 
 A key component of using Remodel is a blueprint.
-This module makes a blueprint. See doc string of class `Blueprinter` in [blueprint_maker](blueprint_maker/__init__.py) for more.
+This module makes a blueprint. See doc string of class `Blueprinter` in [blueprint_maker](pyrosetta_help/blueprint_maker/__init__.py) for more.
 
-    from blueprint_maker import Blueprinter
+    from pyrosetta_help.blueprint_maker import Blueprinter
     blue = Blueprinter.from_pose(pose)
     blue[10:14] = 'NATAA' # preceding loop
     del blue[15:20]
@@ -85,6 +85,9 @@ This class works around a list of dict that contain details of each chain in an 
 * gene_name (gene name)
 
 the instance can be subscripted with any of those three, returning the dict of that chain.
+
+    from pyrosetta_help.chain_ops import ChainOps
+
 To get a single chain pose:
 
     chain_pose = chain_ops.get_pose_of_chain(pose, 'B')

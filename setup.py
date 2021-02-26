@@ -1,9 +1,9 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
     name='pyrosetta_scripts',
     version='0.1',
-    packages=['init_helper', 'score_mutants', 'blueprint_maker'],
+    packages=find_packages(),
     url='https://github.com/matteoferla/pyrosetta_scripts',
     license='MIT',
     author='Matteo Ferla',
