@@ -70,7 +70,7 @@ class BlueprinterSubscripted:
         """
         :return: Highest pose index (this is different from the number of lines due to indels)
         """
-        return [int(row[-1]) for row in self]
+        return max([int(row[0]) for row in self])
 
     def insert(self, idx: int, value: Union[str, List[str]], before: bool = True):
         """
