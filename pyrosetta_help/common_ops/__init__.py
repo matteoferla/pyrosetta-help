@@ -94,13 +94,15 @@ def do_chainwise_relax(pose: pyrosetta.Pose,
         relax.apply(pose)
 
 
-def pose2pandas(pose: pyrosetta.Pose) -> pd.DataFrame:
+def pose2pandas(pose: pyrosetta.Pose, scorefxn: pyrosetta.ScoreFunction) -> pd.DataFrame:
     """
     Return a pandas dataframe from the scores of the pose
     
     :param pose:
     :return:
     """
+    pose.energies().clear_energies()
+    scorefxn(pose)
     scores = pd.DataFrame(pose.energies().residue_total_energies_array())
     pi = pose.pdb_info()
     scores['residue'] = scores.index.to_series()\
@@ -157,3 +159,49 @@ def clarify_selector(selector:  pyrosetta.rosetta.core.select.residue_selector.R
     vector = selector.apply(pose)
     rv = pyrosetta.rosetta.core.select.residue_selector.ResidueVector(vector)
     return [f'[{pose.residue(r).name3()}]{pose2pdb(r).strip().replace(" ",":")}' for r in rv]
+
+
+def download_map(code: str):
+    import shutil
+    import urllib.request as request
+    from contextlib import closing
+    ftp_path = f'ftp://ftp.ebi.ac.uk/pub/databases/emdb/structures/{code}/map/emd_{code.replace("EMD-", "")}.map.gz'
+    file_path = f'{code}.map.gz'
+    with closing(request.urlopen(ftp_path)) as r, open(file_path, 'wb') as f:
+        shutil.copyfileobj(r, f)
+
+
+
+def download_cif(code: str):
+    import requests
+    import shutil
+    """
+    Download CIF. Pyrosetta has issues importing Cifs (hetatms).
+    This is just a note to self as PyMOL fetch can do it.
+    """
+    http_path = f'http://www.ebi.ac.uk/pdbe/static/entry/download/{code.lower()}-assembly-1.cif.gz'
+    file_path = f'{code}.cif.gz'
+    r = requests.get(http_path, stream=True)
+    if r.status_code == 200:
+        with open(file_path, 'wb') as f:
+            r.raw.decode_content = True
+            shutil.copyfileobj(r.raw, f)
+        return True
+    else:
+        return False
+
+def download_opm(code: str):
+    """
+    Download OPM PDB
+    """
+    import shutil, requests
+    http_path = f'https://opm-assets.storage.googleapis.com/pdb/{code.lower()}.pdb'
+    file_path = f'{code}_OMP.pdb'
+    r = requests.get(http_path, stream=True)
+    if r.status_code == 200:
+        with open(file_path, 'wb') as f:
+            r.raw.decode_content = True
+            shutil.copyfileobj(r.raw, f)
+        return True
+    else:
+        return False

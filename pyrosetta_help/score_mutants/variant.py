@@ -26,6 +26,7 @@ class MutantScorer:
         else:
             self.scorefxn = scorefxn
         self.verbose = verbose
+        self.output_folder = 'variants'
 
     @classmethod
     def from_file(cls, filename: str, params_filenames: Optional[List[str]] = None, **kwargs):
@@ -93,7 +94,7 @@ class MutantScorer:
                                    cycles=cycles)
         if self.verbose:
             print('mutant made')
-        variant.dump_scored_pdb(f'variants/{self.modelname}.{mutation}.pdb', self.scorefxn)
+        variant.dump_scored_pdb(f'{self.output_folder}/{self.modelname}.{mutation}.pdb', self.scorefxn)
         m = self.scorefxn(variant)
         data = {'model': self.modelname,
                 'mutation': str(mutation),
@@ -150,6 +151,10 @@ class MutantScorer:
                 print('extra step done.')
         return data, premutant, variant
 
+    def make_output_folder(self):
+        if not os.path.exists(self.output_folder):
+            os.mkdir(self.output_folder)
+
     def score_mutations(self,
                         mutations,
                         chain='A',
@@ -158,8 +163,7 @@ class MutantScorer:
                         distance=10,
                         cycles=5,
                         final_func: Optional[Callable] = None) -> List[Dict[str, Union[float, str]]]:
-        if not os.path.exists('variants'):
-            os.mkdir('variants')
+        self.make_output_folder()
         data = []
         ## wt
         ref_interface_dG = {}

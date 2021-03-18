@@ -117,11 +117,16 @@ blue.mutate(22, 'W') # same as above, but wobbles the preceeding and suceeding r
 To set it:
 
 ```python
-blue.write('mut.blu')
 blue.set('mut.blu')
-# the latter is equivalent to
+```
+This equivalent to the following (handy if something needs manual correction)
+
+```python
+blue.write('mut.blu')
 pyrosetta.rosetta.basic.options.set_file_option('remodel:blueprint', 'mut.blu')
 ```
+
+
     
 This can therefore be used as normal:
     
