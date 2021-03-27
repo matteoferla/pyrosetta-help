@@ -1,0 +1,93 @@
+from typing import *
+import pyrosetta
+import pandas as pd
+import numpy as np
+
+def pose_from_file(pdb_filename: str,
+                   params_filenames: Optional[Union[pyrosetta.rosetta.utility.vector1_string, List[str]]] = None) \
+        -> pyrosetta.Pose:
+    """
+    Return a pose like pose_from_file but with params.
+
+    :param pdb_filename:
+    :param params_filenames:
+    :return:
+    """
+    pose = pyrosetta.Pose()
+    if params_filenames and isinstance(params_filenames, pyrosetta.rosetta.utility.vector1_string):
+        pyrosetta.generate_nonstandard_residue_set(pose, params_filenames)
+    if params_filenames and isinstance(params_filenames, list):
+        params_filenames2 = pyrosetta.rosetta.utility.vector1_string()
+        params_filenames2.extend(params_filenames)
+        pyrosetta.generate_nonstandard_residue_set(pose, params_filenames2)
+    else:
+        pass
+    pyrosetta.rosetta.core.import_pose.pose_from_file(pose, pdb_filename)
+    return pose
+
+
+def pose2pandas(pose: pyrosetta.Pose, scorefxn: pyrosetta.ScoreFunction) -> pd.DataFrame:
+    """
+    Return a pandas dataframe from the scores of the pose
+
+    :param pose:
+    :return:
+    """
+    pose.energies().clear_energies()
+    scorefxn(pose)
+    scores = pd.DataFrame(pose.energies().residue_total_energies_array())
+    pi = pose.pdb_info()
+    scores['residue'] = scores.index.to_series() \
+        .apply(lambda r: pose.residue( r +1) \
+               .name1() + pi.pose2pdb( r +1)
+               )
+    return scores
+
+def add_bfactor_from_score(pose: pyrosetta.Pose):
+    """
+    Adds the bfactors from total_score
+    ``replace_res_remap_bfactors`` may have been a cleaner strategy. This was quicker to write.
+
+    Check this is not the segfaulting version first!!
+    """
+    # scores
+    energies = pose.energies()
+    total_score = pyrosetta.rosetta.core.scoring.ScoreType.total_score
+    # add to pose
+    pdb_info = pose.pdb_info()
+    pdb2pose = pdb_info.pdb2pose
+    total_scores = np.array([float('nan')] + [energies.residue_total_energies(res)[total_score] for res in
+                                              range(1, pose.total_residue() + 1)])
+    total_scores -= np.nanmin(total_scores)
+    total_scores *= 100 / np.nanmax(total_scores)
+    total_scores = np.nan_to_num(total_scores, nan=100)
+    for res in range(1, pose.total_residue() + 1):
+        for i in range(pose.residue(res).natoms()):
+            pdb_info.bfactor(res, i, total_scores[res])
+
+def get_last_res_in_chain(pose, chain='A') -> int:
+    """
+    Returns last residue index in a chain. THere is probably a mover that does this.
+
+    :param pose:
+    :param chain: letter or number
+    :return:
+    """
+    cv = pyrosetta.rosetta.core.select.residue_selector.ChainSelector(chain).apply(pose)
+    rv = pyrosetta.rosetta.core.select.residue_selector.ResidueVector(cv)
+    return max(rv)
+
+def clarify_selector(selector:  pyrosetta.rosetta.core.select.residue_selector.ResidueSelector,
+                     pose: pyrosetta.Pose) -> List['str']:
+    """
+    Given a selector and pose return a list of residues in NGL selection format
+    Example, [CMP]787:H
+
+    :param selector:
+    :param pose:
+    :return: list of residues in NGL selection format
+    """
+    pose2pdb = pose.pdb_info().pose2pdb
+    vector = selector.apply(pose)
+    rv = pyrosetta.rosetta.core.select.residue_selector.ResidueVector(vector)
+    return [f'[{pose.residue(r).name3()}]{pose2pdb(r).strip().replace(" " ,":")}' for r in rv]
