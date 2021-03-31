@@ -52,18 +52,27 @@ def add_bfactor_from_score(pose: pyrosetta.Pose):
     """
     # scores
     energies = pose.energies()
-    total_score = pyrosetta.rosetta.core.scoring.ScoreType.total_score
-    # add to pose
-    pdb_info = pose.pdb_info()
-    pdb2pose = pdb_info.pdb2pose
-    total_scores = np.array([float('nan')] + [energies.residue_total_energies(res)[total_score] for res in
-                                              range(1, pose.total_residue() + 1)])
+
+    def get_res_score(res):
+        total_score = pyrosetta.rosetta.core.scoring.ScoreType.total_score
+        # if pose.residue(res).is_polymer()
+        try:
+            return energies.residue_total_energies(res)[total_score]
+        except:
+            return float('nan')
+
+    # the array goes from zero (nan) to n_residues
+    total_scores = np.array([float('nan')] + [get_res_score(res) for res in range(1, pose.total_residue() + 1)])
+    mask = np.isnan(total_scores)
     total_scores -= np.nanmin(total_scores)
     total_scores *= 100 / np.nanmax(total_scores)
     total_scores = np.nan_to_num(total_scores, nan=100)
-    for res in range(1, pose.total_residue() + 1):
+    total_scores[mask] = 0.
+    # add to pose
+    pdb_info = pose.pdb_info()
+    for res in range(pose.total_residue()):
         for i in range(pose.residue(res).natoms()):
-            pdb_info.bfactor(res, i, total_scores[res])
+            pdb_info.bfactor(res+1, i+1, total_scores[res+1])
 
 def get_last_res_in_chain(pose, chain='A') -> int:
     """

@@ -142,7 +142,6 @@ rm.redesign_loop_neighborhood(False)
 rm.apply(pose)
 ```
     
-    
 ## ChainOps
 
 This class works around a list of dict that contain details of each chain in an model. The key keys are:
