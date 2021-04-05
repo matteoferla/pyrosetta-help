@@ -3,8 +3,9 @@ from ._init import BlueprinterInit as _Init
 from ._common import BlueprinterCommon as _Common
 from ._subscripted import BlueprinterSubscripted as _Subscripted
 from ._expected import BlueprinterExpected as _Expected
+from ._remodel import Remodel as _Remodel
 
-class Blueprinter(_Init, _Subscripted, _Common, _Expected):
+class Blueprinter(_Init, _Subscripted, _Common, _Expected, _Remodel):
     """
     Make a blueprint file for Rosetta Remodel and load it into the options (``.set(fn)``).
     The rows property is a list of lists, this is what the operations manipulate.
