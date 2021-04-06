@@ -38,7 +38,7 @@ class BlueprinterExpected:
         a, gap, b, score = formatted.strip().split('\n')
         gap = ''.join(['.' if c == '|' else '*' for c in gap])
         display(HTML(f'<div style="font-family:monospace; display: inline-block; white-space: nowrap;">'+
-                     '{a}<br/>{gap.replace(" ", "*")}<br/>{b}<br/>{score}</div>'))
+                     f'{a}<br/>{gap.replace(" ", "*")}<br/>{b}<br/>{score}</div>'))
         #ignore pycharm. typehint for display is wrong.
 
     def show_poses_aligned(self, pose_A, pose_B):
