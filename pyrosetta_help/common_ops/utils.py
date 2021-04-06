@@ -2,6 +2,7 @@ from typing import *
 import pyrosetta
 import pandas as pd
 import numpy as np
+from warnings import warn
 
 def pose_from_file(pdb_filename: str,
                    params_filenames: Optional[Union[pyrosetta.rosetta.utility.vector1_string, List[str]]] = None) \
@@ -45,11 +46,22 @@ def pose2pandas(pose: pyrosetta.Pose, scorefxn: pyrosetta.ScoreFunction) -> pd.D
 
 def add_bfactor_from_score(pose: pyrosetta.Pose):
     """
-    Adds the bfactors from total_score
+    Adds the bfactors from total_score.
+    Snippet for testing in Jupyter
+
+    >>> import nglview as nv
+    >>> view = nv.show_rosetta(pose)
+    >>> # view = nv.show_file('test.cif')
+    >>> view.clear_representations()
+    >>> view.add_tube(radiusType="bfactor", color="bfactor", radiusScale=0.10, colorScale="RdYlBu")
+    >>> view
+
     ``replace_res_remap_bfactors`` may have been a cleaner strategy. This was quicker to write.
 
-    Check this is not the segfaulting version first!!
+    If this fails, it may be because the pose was not scored first.
     """
+    if pose.pdb_info().obsolete():
+        raise ValueError('Pose pdb_info is flagged as obsolete (change `pose.pdb_info().obsolete(False)`)')
     # scores
     energies = pose.energies()
 
@@ -71,7 +83,7 @@ def add_bfactor_from_score(pose: pyrosetta.Pose):
     # add to pose
     pdb_info = pose.pdb_info()
     for res in range(pose.total_residue()):
-        for i in range(pose.residue(res).natoms()):
+        for i in range(pose.residue(res+1).natoms()):
             pdb_info.bfactor(res+1, i+1, total_scores[res+1])
 
 def get_last_res_in_chain(pose, chain='A') -> int:
