@@ -256,7 +256,7 @@ class MutantScorer:
                            pose: pyrosetta.Pose,
                            mutation: Optional[Mutation] = None,
                            resi: int = None, chain: str = None, cycles=5, distance=5,
-                           cartesian=False, own_chain_only=False) -> None:
+                           own_chain_only=False) -> None:
         """
         Relaxes pose ``distance`` around resi:chain or mutation
 
@@ -265,7 +265,6 @@ class MutantScorer:
         :param pose:
         :param cycles: of relax (3 quick, 15 thorough)
         :param distance:
-        :param cartesian:
         :return:
         """
         if mutation is None and resi is None:
@@ -290,7 +289,13 @@ class MutantScorer:
         relax = pyrosetta.rosetta.protocols.relax.FastRelax(self.scorefxn, cycles)
         relax.set_movemap(movemap)
         relax.set_movemap_disables_packing_of_fixed_chi_positions(True)
-        relax.cartesian(cartesian)
+        if self.scorefxn.get_weight(pyrosetta.rosetta.core.scoring.ScoreType.cart_bonded) > 0:
+            # it's cartesian!
+            relax.cartesian(True)
+            relax.minimize_bond_angles(True)
+            relax.minimize_bond_lengths(True)
+        else:
+            relax.cartesian(False)
         relax.apply(pose)
 
     def get_neighbour_vector(self, pose: pyrosetta.Pose, resi: int, chain: str, distance: int,
