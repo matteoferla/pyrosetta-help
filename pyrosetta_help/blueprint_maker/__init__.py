@@ -43,6 +43,7 @@ class Blueprinter(_Init, _Subscripted, _Common, _Expected, _Remodel, _Copier):
     * The ranges are human style: deletion of resi 10-15 means that 6 residues are missing, including 15. Where normally in python 10:15 is 5, 15 is excluded.
     * The value is a string but there are no safegards or checks, even if there are a limited amount of possibilities and it would be really nice seeing if the non-canonical for `EMPTY NC XAA`
     """
+    ResInfo = ResInfo
 
     # ========= init ===========================
     # from BlueprinterInit

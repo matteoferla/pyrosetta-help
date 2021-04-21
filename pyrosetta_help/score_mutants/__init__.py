@@ -6,5 +6,4 @@ from .mutation import Mutation
 # this generates and scores variant poses
 # called Variant in some older repos
 from .variant import MutantScorer
-
-from .scores import term_meanings, extend_scores
+from .scores import extend_scores
