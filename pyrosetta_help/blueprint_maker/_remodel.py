@@ -13,8 +13,8 @@ class Remodel:
         lambda self, value: pyrosetta.rosetta.basic.options.set_string_option('remodel:generic_aa', value))
 
     quick_and_dirty = property(
-        lambda self: pyrosetta.rosetta.basic.options.get_string_option('quick_and_dirty'),
-        lambda self, value: pyrosetta.rosetta.basic.options.set_string_option('remodel:quick_and_dirty', value))
+        lambda self: pyrosetta.rosetta.basic.options.get_boolean_option('quick_and_dirty'),
+        lambda self, value: pyrosetta.rosetta.basic.options.set_boolean_option('remodel:quick_and_dirty', value))
 
     def get_remodelmover(self,
                          dr_cycles:int=3,
@@ -26,3 +26,4 @@ class Remodel:
         rm.max_linear_chainbreak(max_linear_chainbreak)
         rm.redesign_loop_neighborhood(redesign_loop_neighborhood)
         return rm
+

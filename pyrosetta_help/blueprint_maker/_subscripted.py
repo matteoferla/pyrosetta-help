@@ -108,7 +108,7 @@ class BlueprinterSubscripted:
             other_idx = idx  # does nothing.
         for i in (idx, other_idx):
             if len(self[i]) <= 3:
-                self[i] = 'NATAA'
+                self[i] = f'PIKAA {self[1]}'
 
     def insert_before(self, idx: int, value: Union[str, List[str]]):
         self.insert(idx, value, before=True)
@@ -127,9 +127,25 @@ class BlueprinterSubscripted:
     def __str__(self):
         return '\n'.join([' '.join(map(str, row)) for row in self])
 
+    def to_pdb_str(self, pose):
+        pose2pdb = pose.pdb_info().pose2pdb
+        lines = []
+        for row in self:
+            if row[0] == 0:
+                lines.append(' '.join(map(str, row)))
+            else:
+                resi, chain = pose2pdb(row[0]).split()
+                lines.append(f'{resi}{chain} '+' '.join(row[1:]))
+        return '\n'.join(lines)
+
     def write(self, bluprint_filename: str):
         with open(bluprint_filename, 'w') as w:
             w.write(str(self))
+
+    def write_pdb_numbered(self, bluprint_filename: str, pose: pyrosetta.Pose):
+        with open(bluprint_filename, 'w') as w:
+            w.write(self.to_pdb_str(pose))
+
 
     def set(self, bluprint_filename: str = 'model.blu'):
         """

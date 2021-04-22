@@ -30,7 +30,7 @@ def get_AtomID(pose, chain:str, resi:int, atomname:str) -> pyrosetta.rosetta.cor
     residue = pose.residue(r)
     return pyrosetta.rosetta.core.id.AtomID(atomno_in=residue.atom_index(atomname), rsd_in=r)
 
-def get_AtomID_by_NGL_sele(selection:str) -> pyrosetta.AtomID:
+def get_AtomID_by_NGL_sele(pose, selection:str) -> pyrosetta.AtomID:
     """
     23:A.CA
     """
@@ -60,4 +60,4 @@ def get_AtomID_by_NGL_sele(selection:str) -> pyrosetta.AtomID:
     if str(resi) == 'nan' or chain == '' or name == '':
         raise ValueError(f'selection {selection} is not like `23:A.CA`.')
     # return
-    return get_AtomID(chain=chain, resi=resi, atomname=name)
+    return get_AtomID(pose, chain=chain, resi=resi, atomname=name)
