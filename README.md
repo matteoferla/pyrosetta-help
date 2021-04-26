@@ -119,10 +119,10 @@ This equivalent to the following (handy if something needs manual correction)
 
 ```python
 blue.write('mut.blu')
-pyrosetta.rosetta.basic.options.set_file_option('remodel:blueprint', 'mut.blu')
+blue.bluprint = 'mut.blu'
+# which calls `pyrosetta.rosetta.basic.options.set_file_option('remodel:blueprint', 'mut.blu')`
+# so do not forget `mover.register_options()`!
 ```
-
-
     
 This can therefore be used as normal:
     

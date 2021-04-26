@@ -16,6 +16,10 @@ class Remodel:
         lambda self: pyrosetta.rosetta.basic.options.get_boolean_option('quick_and_dirty'),
         lambda self, value: pyrosetta.rosetta.basic.options.set_boolean_option('remodel:quick_and_dirty', value))
 
+    blueprint = property(
+        lambda self: pyrosetta.rosetta.basic.options.set_file_option('remodel:blueprint'),
+        lambda self, filename: pyrosetta.rosetta.basic.options.set_file_option('remodel:blueprint', filename))
+
     def get_remodelmover(self,
                          dr_cycles:int=3,
                          max_linear_chainbreak:float=0.07,

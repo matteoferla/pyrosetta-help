@@ -149,7 +149,7 @@ class BlueprinterSubscripted:
 
     def set(self, bluprint_filename: str = 'model.blu'):
         """
-        Sets the blueprint in options
+        Writes and Sets the blueprint in options
         """
         self.write(bluprint_filename)
-        pyrosetta.rosetta.basic.options.set_file_option('remodel:blueprint', bluprint_filename)
+        self.blueprint = bluprint_filename
