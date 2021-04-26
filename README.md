@@ -1,7 +1,11 @@
 # pyrosetta_scripts
 Some functions that I keep using over and over as a Python module.
 
-Also here are some Markdown files, with some boilerplates.
+```bash
+pip3 install pyrosetta-help
+```
+
+Also in GitHub are some Markdown files, with some boilerplates.
 
 ## Starting up
 
