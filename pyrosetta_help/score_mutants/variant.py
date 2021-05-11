@@ -51,7 +51,7 @@ class MutantScorer:
     # ===== score =========================================================================
     def score_mutation(self,
                        mutation_name: str,
-                       chain: str,
+                       chains: str,
                        distance: int,
                        cycles: int,
                        interfaces,
@@ -63,7 +63,7 @@ class MutantScorer:
         returning three objects: a dict of scores, the wt (may differ from pose if preminimise=True) and mutant pose
 
         :param mutation_name:
-        :param chain:
+        :param chains:
         :param distance:
         :param cycles:
         :param interfaces:
@@ -72,26 +72,32 @@ class MutantScorer:
         :param preminimise:
         :return:
         """
-        mutation = self.parse_mutation(mutation_name, chain)
-        if self.verbose:
-            print(mutation)
-        if not self.does_contain(mutation):
-            raise ValueError('Absent')
         if preminimise:
             premutant = self.pose.clone()
-            self.relax_around_mover(premutant,
-                                    mutation=mutation,
-                                    distance=distance,
-                                    cycles=cycles)
-            if self.verbose:
-                print('preminimisation complete')
         else:
             premutant = self.pose
+        for chain in chains:
+            mutation = self.parse_mutation(mutation_name, chain)
+            if self.verbose:
+                print(mutation)
+            if not self.does_contain(mutation):
+                raise ValueError('Absent')
+            if preminimise:
+                self.relax_around_mover(premutant,
+                                        mutation=mutation,
+                                        distance=distance,
+                                        cycles=cycles)
+                if self.verbose:
+                    print('preminimisation complete')
         n = self.scorefxn(premutant)
-        variant = self.make_mutant(premutant,
-                                   mutation=mutation,
-                                   distance=distance,
-                                   cycles=cycles)
+        variant = premutant.clone()
+        for chain in chains:
+            mutation = self.parse_mutation(mutation_name, chain)
+            variant = self.make_mutant(variant,
+                                       mutation=mutation,
+                                       distance=distance,
+                                       cycles=cycles,
+                                       inplace=True)
         if self.verbose:
             print('mutant made')
         variant.dump_scored_pdb(f'{self.output_folder}/{self.modelname}.{mutation}.pdb', self.scorefxn)
@@ -104,12 +110,12 @@ class MutantScorer:
                 'FA_RMSD': self.FA_RMSD(self.pose,
                                         variant,
                                         resi=mutation.pose_resi,
-                                        chain=None,
+                                        chain=chain,
                                         distance=distance),
                 'CA_RMSD': self.CA_RMSD(self.pose,
                                         variant,
                                         resi=mutation.pose_resi,
-                                        chain=None,
+                                        chain=chain,
                                         distance=distance)
                 }
         # interfaces
@@ -217,19 +223,25 @@ class MutantScorer:
                     mutation: Union[str, Mutation],
                     chain='A',
                     distance: int = 10,
-                    cycles: int = 5
+                    cycles: int = 5,
+                    inplace:bool = False,
                     ) -> pyrosetta.Pose:
         """
         Make a point mutant (``A23D``).
         :param pose: pose
         :param mutation:
         :param chain:
-        :return:
+        :param inplace:
+        :return: a copy if inplace is false
         """
-        if pose is None:
+        if pose is None and inplace:
+            raise ValueError('inplace parameter = True works only if pose is provide')
+        elif pose is None:
             mutant = self.pose.clone()
-        else:
+        elif not inplace:
             mutant = pose.clone()
+        else:
+            mutant = pose
         if isinstance(mutation, str):
             mutation = Mutation(mutation, chain, mutant)
         MutateResidue = pyrosetta.rosetta.protocols.simple_moves.MutateResidue
@@ -332,12 +344,17 @@ class MutantScorer:
                 'interface_delta_sasa': ia.get_interface_delta_sasa()}
 
     def has_interface(self, pose: pyrosetta.Pose, interface: str) -> bool:
-        if pose is None:
-            pose = self.pose
-        pose2pdb = pose.pdb_info().pose2pdb
-        have_chains = {pose2pdb(r).split()[1] for r in range(1, pose.total_residue() + 1)}
+        have_chains = self.get_present_chains(pose)
         want_chains = set(interface.replace('_', ''))
         return have_chains == want_chains
+
+    def get_present_chains(self, pose:Optional[pyrosetta.Pose]=None):
+        if pose is None:
+            pose = self.pose
+        #pose2pdb = pose.pdb_info().pose2pdb
+        #return {pose2pdb(r).split()[1] for r in range(1, pose.total_residue() + 1)}
+        pdb_info = pose.pdb_info()
+        return {pdb_info.chain(res+1) for res in range(pose.total_residue())}
 
     def has_residue(self, pose: pyrosetta.Pose, resi: int, chain: str) -> bool:
         if pose is None:
