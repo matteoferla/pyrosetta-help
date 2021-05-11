@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 from warnings import warn
 
+
 def pose_from_file(pdb_filename: str,
                    params_filenames: Optional[Union[pyrosetta.rosetta.utility.vector1_string, List[str]]] = None) \
         -> pyrosetta.Pose:
@@ -39,10 +40,11 @@ def pose2pandas(pose: pyrosetta.Pose, scorefxn: pyrosetta.ScoreFunction) -> pd.D
     scores = pd.DataFrame(pose.energies().residue_total_energies_array())
     pi = pose.pdb_info()
     scores['residue'] = scores.index.to_series() \
-        .apply(lambda r: pose.residue( r +1) \
-               .name1() + pi.pose2pdb( r +1)
+        .apply(lambda r: pose.residue(r + 1) \
+               .name1() + pi.pose2pdb(r + 1)
                )
     return scores
+
 
 def add_bfactor_from_score(pose: pyrosetta.Pose):
     """
@@ -83,8 +85,9 @@ def add_bfactor_from_score(pose: pyrosetta.Pose):
     # add to pose
     pdb_info = pose.pdb_info()
     for res in range(pose.total_residue()):
-        for i in range(pose.residue(res+1).natoms()):
-            pdb_info.bfactor(res+1, i+1, total_scores[res+1])
+        for i in range(pose.residue(res + 1).natoms()):
+            pdb_info.bfactor(res + 1, i + 1, total_scores[res + 1])
+
 
 def get_last_res_in_chain(pose, chain='A') -> int:
     """
@@ -98,7 +101,8 @@ def get_last_res_in_chain(pose, chain='A') -> int:
     rv = pyrosetta.rosetta.core.select.residue_selector.ResidueVector(cv)
     return max(rv)
 
-def clarify_selector(selector:  pyrosetta.rosetta.core.select.residue_selector.ResidueSelector,
+
+def clarify_selector(selector: pyrosetta.rosetta.core.select.residue_selector.ResidueSelector,
                      pose: pyrosetta.Pose) -> List['str']:
     """
     Given a selector and pose return a list of residues in NGL selection format
@@ -111,4 +115,4 @@ def clarify_selector(selector:  pyrosetta.rosetta.core.select.residue_selector.R
     pose2pdb = pose.pdb_info().pose2pdb
     vector = selector.apply(pose)
     rv = pyrosetta.rosetta.core.select.residue_selector.ResidueVector(vector)
-    return [f'[{pose.residue(r).name3()}]{pose2pdb(r).strip().replace(" " ,":")}' for r in rv]
+    return [f'[{pose.residue(r).name3()}]{pose2pdb(r).strip().replace(" ", ":")}' for r in rv]
