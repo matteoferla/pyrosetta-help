@@ -163,7 +163,7 @@ class MutantScorer:
 
     def score_mutations(self,
                         mutations,
-                        chain='A',
+                        chains='A',
                         interfaces=(),  # list of two: name, scheme
                         preminimise=False,
                         distance=10,
@@ -184,7 +184,7 @@ class MutantScorer:
         for mutation_name in mutations:
             try:
                 datum, premutant, mutant = self.score_mutation(mutation_name=mutation_name,
-                                                               chain=chain,
+                                                               chains=chains,
                                                                distance=distance,
                                                                cycles=cycles,
                                                                interfaces=interfaces,
