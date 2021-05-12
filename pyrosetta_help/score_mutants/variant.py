@@ -5,6 +5,7 @@ import re, os, csv, json
 from typing import Optional, List, Dict, Union, Any, Callable, Tuple
 from .mutation import Mutation
 
+
 class MutantScorer:
     """
     Copy pasted from PI4KA <- GNB2 <- SnoopCatcher
@@ -67,7 +68,7 @@ class MutantScorer:
         :param distance:
         :param cycles:
         :param interfaces:
-        :param ref_interface_dG:
+        :param ref_interface_dG: premade if no preminimise.
         :param final_func:
         :param preminimise:
         :return:
@@ -76,6 +77,7 @@ class MutantScorer:
             premutant = self.pose.clone()
         else:
             premutant = self.pose
+        assert len(chains) > 0, 'Specify at least one chain e.g. "A"'
         for chain in chains:
             mutation = self.parse_mutation(mutation_name, chain)
             if self.verbose:
@@ -89,7 +91,6 @@ class MutantScorer:
                                         cycles=cycles)
                 if self.verbose:
                     print('preminimisation complete')
-        n = self.scorefxn(premutant)
         variant = premutant.clone()
         for chain in chains:
             mutation = self.parse_mutation(mutation_name, chain)
@@ -101,6 +102,29 @@ class MutantScorer:
         if self.verbose:
             print('mutant made')
         variant.dump_scored_pdb(f'{self.output_folder}/{self.modelname}.{mutation}.pdb', self.scorefxn)
+        # score proper
+        data = self.score_only(variant=variant,
+                               reference=premutant,
+                               mutation=mutation,
+                               chains=chains,
+                               distance=distance,
+                               interfaces=interfaces,
+                               ref_interface_dG=ref_interface_dG if not preminimise else dict(),
+                               final_func=final_func)
+        # if ref_interface_dG (above) is empty score_only calcutates it, so it makes no diff why its empty.
+        # ie. the ref_interface_dG variable here is empty or an empty argument is passed.
+        return data, premutant, variant
+
+    def score_only(self,
+                   variant: pyrosetta.Pose,
+                   reference: pyrosetta.Pose,
+                   mutation: Mutation,
+                   chains: str,
+                   distance: int,
+                   interfaces: List[Tuple[str, str]],
+                   ref_interface_dG: Dict,
+                   final_func: Optional[Callable] = None) -> dict:
+        n = self.scorefxn(reference)
         m = self.scorefxn(variant)
         data = {'model': self.modelname,
                 'mutation': str(mutation),
@@ -110,20 +134,20 @@ class MutantScorer:
                 'FA_RMSD': self.FA_RMSD(self.pose,
                                         variant,
                                         resi=mutation.pose_resi,
-                                        chain=chain,
+                                        chain=chains[0],
                                         distance=distance),
                 'CA_RMSD': self.CA_RMSD(self.pose,
                                         variant,
                                         resi=mutation.pose_resi,
-                                        chain=chain,
+                                        chain=chains[0],
                                         distance=distance)
                 }
         # interfaces
         for interface_name, interface_scheme in interfaces:
             if self.has_interface(variant, interface_scheme):
-                if preminimise:
-                    ref_interface_dG[interface_name] = self.score_interface(premutant, interface_scheme)[
-                        'interface_dG']
+                if interface_name not in ref_interface_dG:
+                    ref_interface_dG[interface_name] = self.score_interface(reference,
+                                                                            interface_scheme)['interface_dG']
                 if self.verbose:
                     print(f'{interface_name} ({interface_scheme}) applicable to {self.modelname}')
                 i = self.score_interface(variant, interface_scheme)['interface_dG']
@@ -136,14 +160,14 @@ class MutantScorer:
         if self.verbose:
             print('interface scored')
         # raw
-        wt_scoredex = self.get_wscoredict(premutant)
+        wt_scoredex = self.get_wscoredict(reference)
         mut_scoredex = self.get_wscoredict(variant)
         delta_scoredex = self.delta_scoredict(mut_scoredex, wt_scoredex)
         if self.verbose:
             print('scores stored')
         # movement
-        data['wt_rmsd'] = self.movement(original=premutant, resi=mutation.pdb_resi, chain=chain, distance=distance)
-        data['mut_rmsd'] = self.movement(original=premutant, resi=mutation.pdb_resi, chain=chain, distance=distance)
+        data['wt_rmsd'] = self.movement(original=reference, resi=mutation.pdb_resi, chain=chains[0], distance=distance)
+        data['mut_rmsd'] = self.movement(original=reference, resi=mutation.pdb_resi, chain=chains[0], distance=distance)
         data['ratio_rmsd'] = data['mut_rmsd'] / data['wt_rmsd']
         if self.verbose:
             print('movement assessed')
@@ -152,10 +176,10 @@ class MutantScorer:
                 **self.prefix_dict(mut_scoredex, 'mut'),
                 **self.prefix_dict(delta_scoredex, 'delta')}
         if final_func is not None:  # callable
-            final_func(data, premutant, variant)
+            final_func(data, reference, variant)
             if self.verbose:
                 print('extra step done.')
-        return data, premutant, variant
+        return data
 
     def make_output_folder(self):
         if not os.path.exists(self.output_folder):
@@ -224,7 +248,7 @@ class MutantScorer:
                     chain='A',
                     distance: int = 10,
                     cycles: int = 5,
-                    inplace:bool = False,
+                    inplace: bool = False,
                     ) -> pyrosetta.Pose:
         """
         Make a point mutant (``A23D``).
@@ -348,13 +372,13 @@ class MutantScorer:
         want_chains = set(interface.replace('_', ''))
         return have_chains == want_chains
 
-    def get_present_chains(self, pose:Optional[pyrosetta.Pose]=None):
+    def get_present_chains(self, pose: Optional[pyrosetta.Pose] = None):
         if pose is None:
             pose = self.pose
-        #pose2pdb = pose.pdb_info().pose2pdb
-        #return {pose2pdb(r).split()[1] for r in range(1, pose.total_residue() + 1)}
+        # pose2pdb = pose.pdb_info().pose2pdb
+        # return {pose2pdb(r).split()[1] for r in range(1, pose.total_residue() + 1)}
         pdb_info = pose.pdb_info()
-        return {pdb_info.chain(res+1) for res in range(pose.total_residue())}
+        return {pdb_info.chain(res + 1) for res in range(pose.total_residue())}
 
     def has_residue(self, pose: pyrosetta.Pose, resi: int, chain: str) -> bool:
         if pose is None:
