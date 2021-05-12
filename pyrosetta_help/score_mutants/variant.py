@@ -134,12 +134,12 @@ class MutantScorer:
                 'FA_RMSD': self.FA_RMSD(self.pose,
                                         variant,
                                         resi=mutation.pose_resi,
-                                        chain=chains[0],
+                                        chain=None,   # None becase pose_resi is provided.
                                         distance=distance),
                 'CA_RMSD': self.CA_RMSD(self.pose,
                                         variant,
                                         resi=mutation.pose_resi,
-                                        chain=chains[0],
+                                        chain=None, # None becase pose_resi is provided.
                                         distance=distance)
                 }
         # interfaces
@@ -397,12 +397,12 @@ class MutantScorer:
             x.append(w)
         return x
 
-    def CA_RMSD(self, poseA: pyrosetta.Pose, poseB: pyrosetta.Pose, resi: int, chain: str, distance: int) -> float:
+    def CA_RMSD(self, poseA: pyrosetta.Pose, poseB: pyrosetta.Pose, resi: int, chain: Union[str, None], distance: int) -> float:
         n = self.get_neighbour_vector(pose=poseA, resi=resi, chain=chain, distance=distance)
         residues = self.vector2list(n)
         return pyrosetta.rosetta.core.scoring.CA_rmsd(poseA, poseB, residues)
 
-    def FA_RMSD(self, poseA: pyrosetta.Pose, poseB: pyrosetta.Pose, resi: int, chain: str, distance: int) -> float:
+    def FA_RMSD(self, poseA: pyrosetta.Pose, poseB: pyrosetta.Pose, resi: int, chain: Union[str, None], distance: int) -> float:
         n = self.get_neighbour_vector(pose=poseA, resi=resi, chain=chain, distance=distance,
                                       include_focus_in_subset=False)
         residues = self.vector2list(n)
