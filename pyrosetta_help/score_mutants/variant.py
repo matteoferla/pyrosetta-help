@@ -139,7 +139,7 @@ class MutantScorer:
                 'CA_RMSD': self.CA_RMSD(self.pose,
                                         variant,
                                         resi=mutation.pose_resi,
-                                        chain=None, # None becase pose_resi is provided.
+                                        chain=None,  # None because pose_resi is provided.
                                         distance=distance)
                 }
         # interfaces
