@@ -116,3 +116,28 @@ def clarify_selector(selector: pyrosetta.rosetta.core.select.residue_selector.Re
     vector = selector.apply(pose)
     rv = pyrosetta.rosetta.core.select.residue_selector.ResidueVector(vector)
     return [f'[{pose.residue(r).name3()}]{pose2pdb(r).strip().replace(" ", ":")}' for r in rv]
+
+
+def correct_numbering(pose):
+    """
+    A fresh PDBInfo has the PDB residue number the same as the pose one
+    as opposed to restarting per chain.
+
+    :param pose:
+    :return:
+    """
+    pdb_info = pose.pdb_info()
+    if pdb_info is None:
+        pdb_mover = pyrosetta.rosetta.protocols.simple_moves.AddPDBInfoMover()
+        pdb_mover.apply(pose)
+        pdb_info = pose.pdb_info()
+    current_chain = 'A'
+    r = 1
+    for i in range(1, pose.total_residue() +1):
+        if pdb_info.chain(i) != current_chain:
+            current_chain = pdb_info.chain(i)
+            r = 1
+            pdb_info.number(i, 1)
+        else:
+            pdb_info.number(i, r)
+            r += 1

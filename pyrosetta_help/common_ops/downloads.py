@@ -4,7 +4,9 @@ import urllib.request as request
 from contextlib import closing
 
 def download_map(code: str):
-    ftp_path = f'ftp://ftp.ebi.ac.uk/pub/databases/emdb/structures/{code}/map/emd_{code.replace("EMD-", "")}.map.gz'
+    # https://ftp.wwpdb.org/pub/emdb/structures/EMD-20808/map/emd_20808.map.gz
+    code = code.replace("EMD-", "")
+    ftp_path = f'ftp://ftp.ebi.ac.uk/pub/databases/emdb/structures/EMD-{code}/map/emd_{code}.map.gz'
     file_path = f'{code}.map.gz'
     with closing(request.urlopen(ftp_path)) as r, open(file_path, 'wb') as f:
         shutil.copyfileobj(r, f)

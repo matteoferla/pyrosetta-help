@@ -1,5 +1,6 @@
 from typing import *
 import pyrosetta
+import os
 
 def get_local_scorefxn() -> pyrosetta.ScoreFunction:
     ## local scorefxn w/ ED
@@ -24,6 +25,8 @@ def get_local_scorefxn() -> pyrosetta.ScoreFunction:
 
 def prep_ED(pose: pyrosetta.Pose, map_filename: str) -> pyrosetta.rosetta.core.scoring.electron_density.ElectronDensity:
     # rmsd & ED fit
+    if os.path.splitext(map_filename) == '.gz':
+        raise Exception('The file is gzipped')
     rmsd = pyrosetta.rosetta.core.simple_metrics.metrics.RMSDMetric(pose)
     ED = pyrosetta.rosetta.core.scoring.electron_density.getDensityMap(map_filename)
     initial_fit = ED.matchPose(pose)
