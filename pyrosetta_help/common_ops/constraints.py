@@ -11,15 +11,28 @@ def get_NGL_selection_from_AtomID(pose:pyrosetta.Pose, atom_id: pyrosetta.AtomID
 
 
 def print_constraint_score(pose:pyrosetta.Pose, con):
+    """
+    Print the constraint details. atoms and score
+
+    :param pose:
+    :param con:
+    :return:
+    """
     a = get_NGL_selection_from_AtomID(pose, con.atom1())
     b = get_NGL_selection_from_AtomID(pose, con.atom2())
     fun = con.get_func()
-    funpart = f'{fun.__class__.__name__}={fun.x0()}±{fun.sd()}'
+    funpart = f'{fun.__class__.__name__}={fun.x0():.2f}±{fun.sd()}'
     score = con.score(pose)
     print(f'{a} – {b} {funpart} --> {score:.2}')
 
 
 def print_constraint_scores(pose:pyrosetta.Pose):
+    """
+    Prints the scores for each constraint in the pose
+
+    :param pose:
+    :return:
+    """
     cs = pose.constraint_set()
     for con in cs.get_all_constraints():
         print_constraint_score(pose, con)
