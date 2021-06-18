@@ -124,13 +124,19 @@ class MutantScorer:
                    interfaces: List[Tuple[str, str]],
                    ref_interface_dG: Dict,
                    final_func: Optional[Callable] = None) -> dict:
-        n = self.scorefxn(reference)
-        m = self.scorefxn(variant)
+        wt_score = self.scorefxn(reference)
+        mut_score = self.scorefxn(variant)
+        neigh_vector = self.get_neighbour_vector(pose=reference, resi=mutation.pose_resi, chain=chains[0], distance=distance)
+        neigh_wt_score = self.scorefxn.get_sub_score(reference, neigh_vector)
+        neigh_mut_score = self.scorefxn.get_sub_score(variant, neigh_vector)
         data = {'model': self.modelname,
                 'mutation': str(mutation),
-                'complex_ddG': m - n,
-                'complex_native_dG': n,
-                'complex_mutant_dG': m,
+                'complex_ddG': mut_score - wt_score,
+                'complex_native_dG': wt_score,
+                'complex_mutant_dG': mut_score,
+                'complex_ddG_neigh_only': neigh_mut_score - neigh_wt_score,
+                'complex_native_dG_only': neigh_wt_score,
+                'complex_mutant_dG_only': neigh_mut_score,
                 'FA_RMSD': self.FA_RMSD(self.pose,
                                         variant,
                                         resi=mutation.pose_resi,
@@ -184,6 +190,7 @@ class MutantScorer:
     def make_output_folder(self):
         if not os.path.exists(self.output_folder):
             os.mkdir(self.output_folder)
+
 
     def score_mutations(self,
                         mutations,
