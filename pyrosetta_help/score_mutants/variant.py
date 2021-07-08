@@ -58,7 +58,8 @@ class MutantScorer:
                        interfaces,
                        ref_interface_dG: Dict[str, float],
                        final_func: Optional[Callable] = None,
-                       preminimise: bool = False) -> Tuple[Dict[str, float], pyrosetta.Pose, pyrosetta.Pose]:
+                       preminimise: bool = False,
+                       movement: bool = False) -> Tuple[Dict[str, float], pyrosetta.Pose, pyrosetta.Pose]:
         """
         Scores the mutation ``mutation_name`` (str or Mutation instance)
         returning three objects: a dict of scores, the wt (may differ from pose if preminimise=True) and mutant pose
@@ -110,7 +111,8 @@ class MutantScorer:
                                distance=distance,
                                interfaces=interfaces,
                                ref_interface_dG=ref_interface_dG if not preminimise else dict(),
-                               final_func=final_func)
+                               final_func=final_func,
+                               movement=movement)
         # if ref_interface_dG (above) is empty score_only calcutates it, so it makes no diff why its empty.
         # ie. the ref_interface_dG variable here is empty or an empty argument is passed.
         return data, premutant, variant
@@ -123,7 +125,8 @@ class MutantScorer:
                    distance: int,
                    interfaces: List[Tuple[str, str]],
                    ref_interface_dG: Dict,
-                   final_func: Optional[Callable] = None) -> dict:
+                   final_func: Optional[Callable] = None,
+                   movement: bool=False) -> dict:
         wt_score = self.scorefxn(reference)
         mut_score = self.scorefxn(variant)
         neigh_vector = self.get_neighbour_vector(pose=reference, resi=mutation.pose_resi, chain=chains[0], distance=distance)
@@ -172,11 +175,12 @@ class MutantScorer:
         if self.verbose:
             print('scores stored')
         # movement
-        data['wt_rmsd'] = self.movement(original=reference, resi=mutation.pdb_resi, chain=chains[0], distance=distance)
-        data['mut_rmsd'] = self.movement(original=reference, resi=mutation.pdb_resi, chain=chains[0], distance=distance)
-        data['ratio_rmsd'] = data['mut_rmsd'] / data['wt_rmsd']
-        if self.verbose:
-            print('movement assessed')
+        if movement:
+            data['wt_rmsd'] = self.movement(original=reference, resi=mutation.pdb_resi, chain=chains[0], distance=distance)
+            data['mut_rmsd'] = self.movement(original=reference, resi=mutation.pdb_resi, chain=chains[0], distance=distance)
+            data['ratio_rmsd'] = data['mut_rmsd'] / data['wt_rmsd']
+            if self.verbose:
+                print('movement assessed')
         data = {**data,
                 **self.prefix_dict(wt_scoredex, 'wt'),
                 **self.prefix_dict(mut_scoredex, 'mut'),

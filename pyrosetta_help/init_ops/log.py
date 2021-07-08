@@ -41,7 +41,7 @@ def get_log_entries(levelname: Union[str, int]=logging.INFO, query: Optional[str
         else:
             return [e for e in entries if str(query) in e['text']]
 
-def get_all_log_entries() -> List[Dict[str, int, str]]:
+def get_all_log_entries() -> List[Dict[str, Any]]:
     stringio = logging.getLogger("rosetta").handlers[0].stream
     cleaned = []
     previous = None
