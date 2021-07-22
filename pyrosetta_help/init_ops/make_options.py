@@ -1,4 +1,5 @@
 import pyrosetta
+from functools import partial
 
 def make_option_string(**options):
     """
@@ -33,3 +34,10 @@ def make_option_string(**options):
     args = [format_outer(k) for k in options]
     return ' '.join(args)
 
+# values many need changing.
+common_options = dict(no_optH=False,
+                      mute='All',
+                      ex1=None, ex2=None,
+                      ignore_unrecognized_res=True,
+                      load_PDB_components=False,
+                      ignore_waters=True)

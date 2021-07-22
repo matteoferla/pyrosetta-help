@@ -130,7 +130,12 @@ class WeightWatcher:
         """
         Read the file given a scorefxn name
         """
-        filename = os.path.join(self.folder, f'{scorefxn_name}.wts')
+        if '/' in scorefxn_name:
+            filename = scorefxn_name
+        elif '.wts' in scorefxn_name:
+            filename = os.path.join(self.folder, f'{scorefxn_name}')
+        else:
+            filename = os.path.join(self.folder, f'{scorefxn_name}.wts')
         with open(filename, 'r') as fh:
             return fh.read()
 

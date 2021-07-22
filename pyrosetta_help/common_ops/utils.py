@@ -142,4 +142,8 @@ def correct_numbering(pose):
             pdb_info.number(i, r)
             r += 1
 
+def get_pdbstr(pose):
+    buffer = pyrosetta.rosetta.std.stringbuf()
+    pose.dump_pdb(pyrosetta.rosetta.std.ostream(buffer))
+    return buffer.str()
 
