@@ -129,7 +129,10 @@ class MutantScorer:
                    movement: bool=False) -> dict:
         wt_score = self.scorefxn(reference)
         mut_score = self.scorefxn(variant)
-        neigh_vector = self.get_neighbour_vector(pose=reference, resi=mutation.pose_resi, chain=chains[0], distance=distance)
+        neigh_vector = self.get_neighbour_vector(pose=reference,
+                                                 resi=mutation.pose_resi,
+                                                 chain=None,  # if chain is present, it assumes resi is pdb number.
+                                                 distance=distance)
         neigh_wt_score = self.scorefxn.get_sub_score(reference, neigh_vector)
         neigh_mut_score = self.scorefxn.get_sub_score(variant, neigh_vector)
         data = {'model': self.modelname,
@@ -318,7 +321,7 @@ class MutantScorer:
             raise ValueError('mutation or resi+chain required')
         elif mutation is not None:
             resi = mutation.pose_resi
-            chain = None
+            chain = None  # chain None is for pose resi
         else:
             pass
         if pose is None:
