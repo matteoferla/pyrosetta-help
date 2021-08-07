@@ -1,13 +1,34 @@
 import pyrosetta
 import re
+from typing import *
+
+__all__ = ['get_NGL_selection_from_AtomID',
+           'print_constraint_score',
+           'print_constraint_scores',
+           'get_AtomID',
+           'get_AtomID_by_NGL_sele',
+           'get_AtomID_from_pymol_line',
+           'make_constraint_from_pymol_line']
 
 
-def get_NGL_selection_from_AtomID(pose: pyrosetta.Pose, atom_id: pyrosetta.AtomID):
+def get_NGL_selection_from_AtomID(pose: pyrosetta.Pose, atom_id: pyrosetta.AtomID, named:bool=False):
+    """
+    Given a pyrosetta AtomID give an NGL selection.
+    NB ``named`` gives the residue name (``'[SER]3:A.CA'``) but is not a valid selection.
+
+    :param pose:
+    :param atom_id:
+    :param named:
+    :return:
+    """
     pose_resi = atom_id.rsd()
     residue = pose.residue(pose_resi)
     atom_name = residue.atom_name(atom_id.atomno()).strip()
     pdb_resi, chain = pose.pdb_info().pose2pdb(pose_resi).strip().split()
-    return f'[{residue.name3().strip()}]{pdb_resi}:{chain}.{atom_name}'
+    if named:
+        return f'[{residue.name3().strip()}]{pdb_resi}:{chain}.{atom_name}'
+    else:
+        return f'{pdb_resi}:{chain}.{atom_name}'
 
 
 def print_constraint_score(pose: pyrosetta.Pose, con):
@@ -81,8 +102,21 @@ def get_AtomID_by_NGL_sele(pose: pyrosetta.Pose, selection: str) -> pyrosetta.At
     return get_AtomID(pose, chain=chain, resi=resi, atomname=name)
 
 
-def get_AtomID_from_pymol_line(pose: pyrosetta.Pose, line: str) -> pyrosetta.rosetta.core.id.AtomID:
+def get_AtomID_from_pymol_line(pose: pyrosetta.Pose, line: Optional[str] = None) -> pyrosetta.rosetta.core.id.AtomID:
+    """
+    Given a copypaste from the console in pymol following an atom selection in edit mode:
+    (``You clicked /1amq/B/A/PMP`413/N1 -> (pk2)``) returns that atom in PyRosetta.
+
+    If the line argument is blank the clipboard is read.
+
+    :param pose:
+    :param line:
+    :return:
+    """
     # You clicked /1amq/B/A/PMP`413/N1 -> (pk2)
+    if line is None:
+        import xerox
+        line = xerox.paste()
     rex = re.search(r'\/\w+/\w?/(\w)/\w{3}`(\d+)/(\w+) ', line)
     chain, res, atomname = rex.groups()
     return get_AtomID(pose, chain, int(res), atomname)

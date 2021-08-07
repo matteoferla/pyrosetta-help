@@ -2,6 +2,12 @@ from typing import *
 import pyrosetta
 import os
 
+__all__ = ['get_local_scorefxn',
+           'prep_ED',
+           'get_local_relax',
+           'do_local_relax',
+           'do_chainwise_relax']
+
 def get_local_scorefxn() -> pyrosetta.ScoreFunction:
     ## local scorefxn w/ ED
     # ---------- Local weights ------------------

@@ -3,6 +3,7 @@ import pyrosetta
 import pandas as pd
 import numpy as np
 from warnings import warn
+from collections import Counter
 
 
 def pose_from_file(pdb_filename: str,
@@ -36,6 +37,10 @@ def pose2pandas(pose: pyrosetta.Pose, scorefxn: pyrosetta.ScoreFunction) -> pd.D
     :return:
     """
     pose.energies().clear_energies()
+    scorefxn.weights() # neccessary?
+    emopts = pyrosetta.rosetta.core.scoring.methods.EnergyMethodOptions(scorefxn.energy_method_options())
+    emopts.hbond_options().decompose_bb_hb_into_pair_energies(True)
+    scorefxn.set_energy_method_options(emopts)
     scorefxn(pose)
     scores = pd.DataFrame(pose.energies().residue_total_energies_array())
     pi = pose.pdb_info()
@@ -117,6 +122,13 @@ def clarify_selector(selector: pyrosetta.rosetta.core.select.residue_selector.Re
     rv = pyrosetta.rosetta.core.select.residue_selector.ResidueVector(vector)
     return [f'[{pose.residue(r).name3()}]{pose2pdb(r).strip().replace(" ", ":")}' for r in rv]
 
+def count_ligands(pose: pyrosetta.Pose) -> List[Tuple[str, int]]:
+    LIGAND = pyrosetta.rosetta.core.chemical.ResidueProperty.LIGAND
+    pr_rs = pyrosetta.rosetta.core.select.residue_selector
+    lig_sele = pr_rs.ResiduePropertySelector(LIGAND)
+    count = Counter([pose.residue(i).name3() for i in pr_rs.ResidueVector(lig_sele.apply(pose))])
+    return count.most_common()
+
 
 def correct_numbering(pose):
     """
@@ -146,4 +158,3 @@ def get_pdbstr(pose):
     buffer = pyrosetta.rosetta.std.stringbuf()
     pose.dump_pdb(pyrosetta.rosetta.std.ostream(buffer))
     return buffer.str()
-

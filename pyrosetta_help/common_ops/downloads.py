@@ -1,3 +1,8 @@
+__all__ = ['download_map',
+           'download_cif',
+           'download_pdb',
+           'download_opm']
+
 import requests
 import shutil
 import urllib.request as request

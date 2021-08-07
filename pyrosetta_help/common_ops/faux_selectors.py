@@ -1,3 +1,9 @@
+__all__ = ['RingSelector',
+           'AlteredSelector',
+           'UnalteredSelector',
+           'OrListSelector']
+
+
 import pyrosetta
 
 class RingSelector:

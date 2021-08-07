@@ -4,6 +4,7 @@ from .utils import *
 from .minimise import *
 from .faux_selectors import *
 try:
-    from .nglview import nv
+    from .nglview import nglview
 except ImportError:
     pass
+

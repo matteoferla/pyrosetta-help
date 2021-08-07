@@ -7,9 +7,20 @@ Adds to the NGLView Widget the method ``.add_selector``
 """
 
 import pyrosetta
-import nglview as nv
+import nglview
+from io import StringIO
 
-def add_selector(self: nv.widget.NGLWidget,
+def selector_to_ngl(self: nglview.widget.NGLWidget,
+                    pose: pyrosetta.Pose,
+                    selector: pyrosetta.rosetta.core.select.residue_selector.ResidueSelector):
+    pdb_info = pose.pdb_info()
+    # should probably `deal with pdb_info.segmentID(1).strip()`
+    ResidueVector = pyrosetta.rosetta.core.select.residue_selector.ResidueVector
+    selections = [f'{pdb_info.number(r)}:{pdb_info.chain(r)}' for r in ResidueVector(selector.apply(pose))]
+    selection = ' or '.join(selections)
+    return selection
+
+def add_selector(self: nglview.widget.NGLWidget,
                   pose: pyrosetta.Pose,
                   selector: pyrosetta.rosetta.core.select.residue_selector.ResidueSelector,
                   representation_name: str = 'hyperball',
@@ -27,16 +38,36 @@ def add_selector(self: nv.widget.NGLWidget,
     :param other:
     :return:
     """
-    pdb_info = pose.pdb_info()
-    # should probably `deal with pdb_info.segmentID(1).strip()`
-    ResidueVector = pyrosetta.rosetta.core.select.residue_selector.ResidueVector
-    selections = [f'{pdb_info.number(r)}:{pdb_info.chain(r)}' for r in ResidueVector(selector.apply(pose))]
-    selection = ' or '.join(selections)
+    selection = self.selector_to_ngl(pose, selector)
     self.add_representation(representation_name,
                             colorValue=color,
                             selection=selection,
                             **other)
     self.center(selection)
 
+def add_rosetta(self: nglview.widget.NGLWidget,
+                pose: pyrosetta.Pose):
+    buffer = pyrosetta.rosetta.std.stringbuf()
+    pose.dump_pdb(pyrosetta.rosetta.std.ostream(buffer))
+    fh = StringIO(buffer.str())
+    c = self.add_component(fh, ext='pdb')
+    # c.update_cartoon(color='bfactor')
+    return c
 
-nv.widget.NGLWidget.add_selector = add_selector
+
+def make_pose_comparison(first_pose: pyrosetta.Pose,
+                         second_pose: pyrosetta.Pose,
+                         first_color: str = '#F8766D',
+                         second_color: str = '#00B4C4'):
+    self = nglview.widget.NGLWidget()
+    c0 = self.add_rosetta(first_pose)
+    c0.update_cartoon(color=first_color, smoothSheet=True)
+    c1 = self.add_rosetta(second_pose)
+    c1.update_cartoon(color=second_color, smoothSheet=True)
+
+# ======= Monkey patch ==========================================
+
+nglview.widget.NGLWidget.add_selector = selector_to_ngl
+nglview.widget.NGLWidget.add_selector = add_selector
+nglview.widget.NGLWidget.add_rosetta = add_rosetta
+nglview.make_pose_comparison = make_pose_comparison
