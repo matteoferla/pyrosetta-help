@@ -9,10 +9,19 @@ Adds to the NGLView Widget the method ``.add_selector``
 import pyrosetta
 import nglview
 from io import StringIO
+from typing import *
 
 def selector_to_ngl(self: nglview.widget.NGLWidget,
                     pose: pyrosetta.Pose,
                     selector: pyrosetta.rosetta.core.select.residue_selector.ResidueSelector):
+    """
+    Given a pose and a selector return the selection string for NGL.
+
+    :param self:
+    :param pose:
+    :param selector:
+    :return:
+    """
     pdb_info = pose.pdb_info()
     # should probably `deal with pdb_info.segmentID(1).strip()`
     ResidueVector = pyrosetta.rosetta.core.select.residue_selector.ResidueVector
@@ -46,20 +55,42 @@ def add_selector(self: nglview.widget.NGLWidget,
     self.center(selection)
 
 def add_rosetta(self: nglview.widget.NGLWidget,
-                pose: pyrosetta.Pose):
+                pose: pyrosetta.Pose, color:Optional[str]=None):
+    """
+    The module method ``show_rosetta`` creates an NGLWidget
+    This is a monkeypatched bound method.
+
+    :param self:
+    :param pose:
+    :param bfactor:
+    :return:
+    """
     buffer = pyrosetta.rosetta.std.stringbuf()
     pose.dump_pdb(pyrosetta.rosetta.std.ostream(buffer))
     fh = StringIO(buffer.str())
     c = self.add_component(fh, ext='pdb')
-    # c.update_cartoon(color='bfactor')
+    if color:
+        c.update_cartoon(color='color', smoothSheet=True)
     return c
 
 
-def make_pose_comparison(first_pose: pyrosetta.Pose,
+def make_pose_comparison(self: nglview.widget.NGLWidget,
+                         first_pose: pyrosetta.Pose,
                          second_pose: pyrosetta.Pose,
                          first_color: str = '#F8766D',
                          second_color: str = '#00B4C4'):
-    self = nglview.widget.NGLWidget()
+    """
+    Adds two objects, the first colored by default in #00B4C4, which is turquoise,
+     while the second #F8766D, which is salmon.
+     The poses are assumed aligned.
+
+    :param self:
+    :param first_pose:
+    :param second_pose:
+    :param first_color:
+    :param second_color:
+    :return:
+    """
     c0 = self.add_rosetta(first_pose)
     c0.update_cartoon(color=first_color, smoothSheet=True)
     c1 = self.add_rosetta(second_pose)
