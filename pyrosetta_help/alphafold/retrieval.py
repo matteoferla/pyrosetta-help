@@ -1,4 +1,4 @@
-__all__ = ['pose_from_alphafold2', 'get_alphafold2_error']
+__all__ = ['pose_from_alphafold2', 'get_alphafold2_error', 'reshape_errors']
 
 import requests
 import pyrosetta

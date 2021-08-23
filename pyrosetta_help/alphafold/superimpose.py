@@ -16,13 +16,24 @@ def paired_residue_inds(a: pyrosetta.Pose, b: pyrosetta.Pose):
     return [(astart + i, bstart + i) for i in range(align_len)]
 
 
-def superimpose_by_pLDDT(pose: pyrosetta.Pose, original: pyrosetta.Pose, cutoff=70):
+def superimpose_by_pLDDT(pose: pyrosetta.Pose,
+                         original: pyrosetta.Pose,
+                         cutoff=70,
+                         pose_range=None) -> map_core_id_AtomID_core_id_AtomID:
     """
-    Superimpose two poses, based on residues with pLDDT above a given threshold
+    Superimpose two poses, based on residues with pLDDT above a given threshold.
+
+    :param pose:
+    :param original:
+    :param cutoff: %
+    :param pose_range: optional argument to subset (start:int, end:int)
+    :return:
     """
     ca_map = map_core_id_AtomID_core_id_AtomID()
     for w, a in paired_residue_inds(pose, original):
         if original.pdb_info().bfactor(a + 1, 1) <= cutoff:
+            continue
+        if pose_range is not None and (w < pose_range[0] or w > pose_range[1]):
             continue
         ca_map[AtomID(pose.residue(w + 1).atom_index("CA"), w + 1)] = AtomID(
             original.residue(a + 1).atom_index("CA"), a + 1

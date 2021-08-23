@@ -1,9 +1,11 @@
-__all__ = ['constrain_distances']
+__all__ = ['add_pae_constraints', 'add_stretch_constraint']
 
 import pyrosetta
 import numpy as np
+from typing import *
 
-def constrain_distances(pose: pyrosetta.Pose,
+
+def add_pae_constraints(pose: pyrosetta.Pose,
                         errors: np.ndarray,
                         cutoff: float = 5,
                         weight: float = 1,
@@ -44,3 +46,41 @@ def constrain_distances(pose: pyrosetta.Pose,
     setup.constraint_set(cs)
     setup.apply(pose)
     return cs
+
+
+def add_stretch_constraint(pose: pyrosetta.Pose,
+                           weight: float = 5,
+                           slope_in: float = -0.05,
+                           residue_index_A: int = 1,
+                           residue_index_B: int = -1,
+                           distance: Optional[
+                               float] = None) -> pyrosetta.rosetta.core.scoring.constraints.AtomPairConstraint:
+    """
+    Add a constraint to "stretch out" the model, because ``slope_in`` is negative.
+
+    :param pose: Pose to add constraint to
+    :param weight: how strength of constraint (max of 0.5 for ``SigmoidFunc``)
+    :param slope_in: negative number to stretch
+    :param residue_index_A: first residue?
+    :param residue_index_B: last residue is "-1"
+    :param distance: if omitted, the midpoint of Sigmoid will be the current distance
+    :return:
+    """
+    # get current length
+    first_ca = pyrosetta.AtomID(atomno_in=pose.residue(residue_index_A).atom_index('CA'),
+                                rsd_in=residue_index_A)
+    if residue_index_B == -1:
+        residue_index_B = pose.total_residue()
+    last_ca = pyrosetta.AtomID(atomno_in=pose.residue(residue_index_B).atom_index('CA'),
+                               rsd_in=residue_index_B)
+    first_ca_xyz = pose.residue(1).xyz(first_ca.atomno())
+    last_ca_xyz = pose.residue(pose.total_residue()).xyz(last_ca.atomno())
+    if distance is None:
+        distance = (first_ca_xyz - last_ca_xyz).norm()
+    # make & add con
+    sf = pyrosetta.rosetta.core.scoring.func
+    AtomPairConstraint = pyrosetta.rosetta.core.scoring.constraints.AtomPairConstraint
+    fun = sf.ScalarWeightedFunc(weight, sf.SigmoidFunc(x0_in=distance, slope_in=slope_in))
+    con = AtomPairConstraint(first_ca, last_ca, fun)
+    pose.constraint_set().add_constraint(con)
+    return con
