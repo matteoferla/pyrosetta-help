@@ -12,9 +12,10 @@ def download_map(code: str):
     # https://ftp.wwpdb.org/pub/emdb/structures/EMD-20808/map/emd_20808.map.gz
     code = code.replace("EMD-", "")
     ftp_path = f'ftp://ftp.ebi.ac.uk/pub/databases/emdb/structures/EMD-{code}/map/emd_{code}.map.gz'
-    file_path = f'{code}.map.gz'
+    file_path = f'EMD-{code}.map.gz'
     with closing(request.urlopen(ftp_path)) as r, open(file_path, 'wb') as f:
         shutil.copyfileobj(r, f)
+    return file_path
 
 def download_cif(code: str):
     """

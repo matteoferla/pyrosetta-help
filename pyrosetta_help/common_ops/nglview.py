@@ -10,6 +10,9 @@ import pyrosetta
 import nglview
 from io import StringIO
 from typing import *
+from .constraints import get_NGL_selection_from_AtomID
+from .utils import get_pdbstr
+
 
 def selector_to_ngl(self: nglview.widget.NGLWidget,
                     pose: pyrosetta.Pose,
@@ -29,12 +32,13 @@ def selector_to_ngl(self: nglview.widget.NGLWidget,
     selection = ' or '.join(selections)
     return selection
 
+
 def add_selector(self: nglview.widget.NGLWidget,
-                  pose: pyrosetta.Pose,
-                  selector: pyrosetta.rosetta.core.select.residue_selector.ResidueSelector,
-                  representation_name: str = 'hyperball',
-                  color: str = 'grey',
-                  **other):
+                 pose: pyrosetta.Pose,
+                 selector: pyrosetta.rosetta.core.select.residue_selector.ResidueSelector,
+                 representation_name: str = 'hyperball',
+                 color: str = 'grey',
+                 **other):
     """
     Add a representation of type ``representation_name`` (def. 'hyperball') and center
     based upon the Pyrosetta residue selector
@@ -54,8 +58,9 @@ def add_selector(self: nglview.widget.NGLWidget,
                             **other)
     self.center(selection)
 
+
 def add_rosetta(self: nglview.widget.NGLWidget,
-                pose: pyrosetta.Pose, color:Optional[str]=None):
+                pose: pyrosetta.Pose, color: Optional[str] = None):
     """
     The module method ``show_rosetta`` creates an NGLWidget
     This is a monkeypatched bound method.
@@ -65,9 +70,7 @@ def add_rosetta(self: nglview.widget.NGLWidget,
     :param bfactor:
     :return:
     """
-    buffer = pyrosetta.rosetta.std.stringbuf()
-    pose.dump_pdb(pyrosetta.rosetta.std.ostream(buffer))
-    fh = StringIO(buffer.str())
+    fh = StringIO(get_pdbstr(pose))
     c = self.add_component(fh, ext='pdb')
     if color:
         c.update_cartoon(color='color', smoothSheet=True)
@@ -96,9 +99,29 @@ def make_pose_comparison(self: nglview.widget.NGLWidget,
     c1 = self.add_rosetta(second_pose)
     c1.update_cartoon(color=second_color, smoothSheet=True)
 
+
+def add_constraints(self: nglview.widget.NGLWidget,
+                    pose: pyrosetta.Pose,
+                    component=0,
+                    color="skyblue"):
+    atom_pairs = [[get_NGL_selection_from_AtomID(pose, con.atom1(), named=False),
+                   get_NGL_selection_from_AtomID(pose, con.atom2(), named=False)
+                   ]
+                  for con in pose.constraint_set().get_all_constraints()
+                  ]
+    atom_pairs = [[a1, a2] for a1, a2 in atom_pairs if a1 != a2]
+    component = getattr(self, f'component_{component}')
+    component.add_representation("distance",
+                                 atomPair=atom_pairs,
+                                 color=color
+                                 )
+    return atom_pairs
+
+
 # ======= Monkey patch ==========================================
 
 nglview.widget.NGLWidget.add_selector = selector_to_ngl
 nglview.widget.NGLWidget.add_selector = add_selector
 nglview.widget.NGLWidget.add_rosetta = add_rosetta
+nglview.widget.NGLWidget.add_constraints = add_constraints
 nglview.make_pose_comparison = make_pose_comparison

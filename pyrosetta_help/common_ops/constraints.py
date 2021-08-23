@@ -8,10 +8,12 @@ __all__ = ['get_NGL_selection_from_AtomID',
            'get_AtomID',
            'get_AtomID_by_NGL_sele',
            'get_AtomID_from_pymol_line',
-           'make_constraint_from_pymol_line']
+           'make_constraint_from_pymol_line',
+           'print_bad_constraint_scores',
+           'constraints2pandas']
 
 
-def get_NGL_selection_from_AtomID(pose: pyrosetta.Pose, atom_id: pyrosetta.AtomID, named:bool=False):
+def get_NGL_selection_from_AtomID(pose: pyrosetta.Pose, atom_id: pyrosetta.AtomID, named: bool = False):
     """
     Given a pyrosetta AtomID give an NGL selection.
     NB ``named`` gives the residue name (``'[SER]3:A.CA'``) but is not a valid selection.
@@ -39,15 +41,35 @@ def print_constraint_score(pose: pyrosetta.Pose, con):
     :param con:
     :return:
     """
+    data = get_constraint_score_data(pose, con)
+    print('{constraint_name}: {atom_A} – {atom_B} {function_name}={funpart} --> {score:.2}'.format(**data))
+
+
+def get_constraint_score_data(pose: pyrosetta.Pose, con) -> dict:
+    """
+    Print the constraint details. atoms and score
+
+    :param pose:
+    :param con:
+    :return:
+    """
     a = get_NGL_selection_from_AtomID(pose, con.atom1())
     b = get_NGL_selection_from_AtomID(pose, con.atom2())
     fun = con.get_func()
-    if hasattr(fun, 'x0'):
-        funpart = f'{fun.__class__.__name__}={fun.x0():.2f}±{fun.sd()}'
+    if hasattr(fun, 'x0') and hasattr(fun, 'sd'):
+        funpart = f'{fun.x0():.2f}/{fun.sd():.2f}'
+    elif hasattr(fun, 'x0'):
+        funpart = f'{fun.x0():.2f}'
     else:
-        funpart = f'{fun.__class__.__name__}=NA'
+        funpart = f'NA'
     score = con.score(pose)
-    print(f'{con.__class__.__name__}: {a} – {b} {funpart} --> {score:.2}')
+    return dict(constraint_name=con.__class__.__name__,
+                function_name=fun.__class__.__name__,
+                atom_A=a,  # NGL_selection
+                atom_B=b,  # NGL_selection
+                funpart=funpart,
+                score=score
+                )
 
 
 def print_constraint_scores(pose: pyrosetta.Pose):
@@ -60,6 +82,23 @@ def print_constraint_scores(pose: pyrosetta.Pose):
     cs = pose.constraint_set()
     for con in cs.get_all_constraints():
         print_constraint_score(pose, con)
+
+
+def constraints2pandas(pose):
+    import pandas as pd
+    cs = pose.constraint_set()
+    rows = []
+    for con in cs.get_all_constraints():
+        rows.append(get_constraint_score_data(pose, con))
+    return pd.DataFrame(rows)
+
+
+def print_bad_constraint_scores(pose, cutoff=0.5):
+    cs = pose.constraint_set()
+    for con in cs.get_all_constraints():
+        data = get_constraint_score_data(pose, con)
+        if data['score'] > cutoff:
+            print('{constraint_name}: {atom_A} – {atom_B} {function_name}={funpart} --> {score:.2}'.format(**data))
 
 
 def get_AtomID(pose: pyrosetta.Pose, chain: str, resi: int, atomname: str) -> pyrosetta.AtomID:
