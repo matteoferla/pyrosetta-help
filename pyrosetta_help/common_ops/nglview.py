@@ -120,7 +120,7 @@ def add_constraints(self: nglview.widget.NGLWidget,
 
 # ======= Monkey patch ==========================================
 
-nglview.widget.NGLWidget.add_selector = selector_to_ngl
+nglview.widget.NGLWidget.selector_to_ngl = selector_to_ngl
 nglview.widget.NGLWidget.add_selector = add_selector
 nglview.widget.NGLWidget.add_rosetta = add_rosetta
 nglview.widget.NGLWidget.add_constraints = add_constraints
