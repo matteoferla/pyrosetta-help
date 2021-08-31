@@ -42,14 +42,14 @@ class AlteredSelector:
         sele = pyrosetta.rosetta.utility.vector1_bool(pose.total_residue())
         mapping = self.threader.get_qt_mapping(pose).mapping()
         for r in range(1, pose.total_residue() + 1):
-            if mapping[r] == 0:
+            if mapping[r] != 0:
                 sele[r] = 1
         return sele
 
 
 class UnalteredSelector:
     """
-    Select residues that were altered in the threading.
+    Select residues that were unaltered in the threading.
     NB> This is not actually a residue selector. The logical selectors will not accept it.
     """
 
@@ -60,7 +60,7 @@ class UnalteredSelector:
         sele = pyrosetta.rosetta.utility.vector1_bool(pose.total_residue())
         mapping = self.threader.get_qt_mapping(pose).mapping()
         for r in range(1, pose.total_residue() + 1):
-            if mapping[r] != 0:
+            if mapping[r] == 0:
                 sele[r] = 1
         return sele
 
