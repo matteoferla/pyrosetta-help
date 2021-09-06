@@ -1,5 +1,6 @@
 __all__ = ['pose_from_file',
            'pose2pandas',
+           'make_blank_pose',
            'add_bfactor_from_score',
            'get_last_res_in_chain',
            'clarify_selector',
@@ -25,16 +26,33 @@ def pose_from_file(pdb_filename: str,
     :param params_filenames:
     :return:
     """
+    pose = make_blank_pose(params_filenames)
+    pyrosetta.rosetta.core.import_pose.pose_from_file(pose, pdb_filename)
+    return pose
+
+
+vector1_string = pyrosetta.rosetta.utility.vector1_string
+
+
+def make_blank_pose(params_filenames: Optional[Union[vector1_string, List[str]]] = None) \
+        -> pyrosetta.Pose:
+    """
+    Returns an empty pose, but with params.
+
+    :param params_filenames:
+    :return:
+    """
     pose = pyrosetta.Pose()
-    if params_filenames and isinstance(params_filenames, pyrosetta.rosetta.utility.vector1_string):
+    if params_filenames and isinstance(params_filenames, vector1_string):
         pyrosetta.generate_nonstandard_residue_set(pose, params_filenames)
     if params_filenames and isinstance(params_filenames, list):
-        params_filenames2 = pyrosetta.rosetta.utility.vector1_string()
+        params_filenames2 = vector1_string()
         params_filenames2.extend(params_filenames)
         pyrosetta.generate_nonstandard_residue_set(pose, params_filenames2)
+    elif params_filenames:
+        raise TypeError(f'Unexpected type {type(params_filenames)}')
     else:
         pass
-    pyrosetta.rosetta.core.import_pose.pose_from_file(pose, pdb_filename)
     return pose
 
 
@@ -167,3 +185,4 @@ def get_pdbstr(pose):
     buffer = pyrosetta.rosetta.std.stringbuf()
     pose.dump_pdb(pyrosetta.rosetta.std.ostream(buffer))
     return buffer.str()
+

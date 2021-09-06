@@ -32,7 +32,8 @@ def thread(target_sequence: str,
            target_pose: Optional[pyrosetta.Pose] = None,
            target_name: str = 'target',
            template_name: str = 'template') -> Tuple[pyrosetta.Pose,
-                                                     pyrosetta.rosetta.protocols.comparative_modeling.ThreadingMover]:
+                                                     pyrosetta.rosetta.protocols.comparative_modeling.ThreadingMover,
+                                                     pyrosetta.rosetta.utility.vector1_bool]:
     """
     Actual operation.
 
@@ -56,11 +57,20 @@ def thread(target_sequence: str,
                                                                                template_pose=template_pose)
     if target_pose is None:
         target_pose = pyrosetta.Pose()
-    pyrosetta.rosetta.core.pose.make_pose_from_sequence(target_pose,
-                                                        target_sequence,
-                                                        'fa_standard')
+        pyrosetta.rosetta.core.pose.make_pose_from_sequence(target_pose,
+                                                            target_sequence,
+                                                            'fa_standard')
     threader.apply(target_pose)
-    return target_pose, threader
+    qt = threader.get_qt_mapping(target_pose)
+    steal = pyrosetta.rosetta.protocols.comparative_modeling.StealSideChainsMover(template_pose, qt)
+    steal.apply(target_pose)
+    # v = AlteredSelector(threader).apply(itpr3_pose)
+    vector = pyrosetta.rosetta.utility.vector1_bool(target_pose.total_residue())
+    mapping = qt.mapping()
+    for r in range(1, target_pose.total_residue() + 1):
+        if mapping[r] != 0:
+            vector[r] = 1
+    return target_pose, threader, vector
 
 
 def rangify(values):
@@ -115,12 +125,14 @@ def oligomer_thread(pose, sequence):
     pyrosetta.rosetta.core.pose.remove_nonprotein_residues(faux)
     threaded = None
     threaders = []
+    master_vector = pyrosetta.rosetta.utility.vector1_bool()
     for chain_pose in faux.split_by_chain():
-        target_pose, threader = thread(target_sequence=sequence, template_pose=chain_pose)
+        target_pose, threader, vector = thread(target_sequence=sequence, template_pose=chain_pose)
         threaders.append(threader)
         if threaded is None:
             threaded = target_pose
         else:
             threaded.append_pose_by_jump(target_pose, threaded.num_jump() + 1)
+            master_vector.extend(vector)
     threaded.append_pose_by_jump(get_nonprotein_pose(pose), threaded.num_jump() + 1)
-    return threaded, threaders
+    return threaded, threaders, master_vector

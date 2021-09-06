@@ -5,6 +5,7 @@ import os, re, json
 from typing import *
 import pandas as pd
 import pyrosetta
+pr_rs = pyrosetta.rosetta.core.select.residue_selector
 from .retrieval import reshape_errors
 from .constraints import add_pae_constraints
 
@@ -64,8 +65,16 @@ class AF2NotebookAnalyser:
         self.scores['pLDDT'] = self.scores['rank'].map(pLDDTs)
         self.scores['pTMscore'] = self.scores['rank'].map(pTMscores)
 
-    def get_poses(self) -> pyrosetta.rosetta.utility.vector1_core_pose_Pose:
-        poses = pyrosetta.rosetta.utility.vector1_core_pose_Pose(len(self.scores))
+    def get_poses(self) -> Dict[int, pyrosetta.Pose]:
+        """
+        This used to be a ``pyrosetta.rosetta.utility.vector1_core_pose_Pose``
+        but it turns out that the getitem of ``vector1_core_pose_Pose``
+        returns a clone of the pose, not the pose itself.
+
+        :return:
+        """
+        # poses = pyrosetta.rosetta.utility.vector1_core_pose_Pose(len(self.scores))
+        poses = dict()
         for i, row in self.scores.iterrows():
             poses[row['rank']] = pyrosetta.pose_from_file(row['path'])
         return poses
@@ -80,18 +89,34 @@ class AF2NotebookAnalyser:
                 errors[row['rank']] = reshape_errors(json.load(fh))
         return errors
 
-    def constrain_and_relax(self):
+    def _generator_poses(self):
+        """
+        :return: rank integer, pose, error dictionary
+        """
+        return ((index, self.poses[index], self.errors[index]) for index in self.errors)
+
+    def constrain(self):
+        if self.poses is None:
+            raise ValueError('Load poses first.')
+        for index, pose, error in self.generator_poses:
+            add_pae_constraints(pose, error)
+
+    def relax(self, cycles:int=3):
+        if self.poses is None:
+            raise ValueError('Load poses first.')
         scorefxn = pyrosetta.get_fa_scorefxn()
         ap_st = pyrosetta.rosetta.core.scoring.ScoreType.atom_pair_constraint
         scorefxn.set_weight(ap_st, 1)
-        if self.poses is None:
-            raise ValueError('Load poses first.')
-        for pose, error in zip(self.poses, self.errors):
-            add_pae_constraints(pose, error)
-            relax = pyrosetta.rosetta.protocols.relax.FastRelax(scorefxn, 3)
+        for index, pose, error in self.generator_poses:
+            relax = pyrosetta.rosetta.protocols.relax.FastRelax(scorefxn, cycles)
             relax.apply(pose)
         # Add dG
         self.scores['dG'] = self.scores['rank'].apply(lambda rank: scorefxn(self.poses[rank]))
+
+    def constrain_and_relax(self, cycles:int=3):
+        self.constrain()
+        self.relax(cycles)
+
 
     def calculate_interface(self, interface = 'A_B'):
         self.get_median_interface_bfactors()
@@ -114,13 +139,45 @@ class AF2NotebookAnalyser:
         for column in newdata.columns:
             self.scores[column] = newdata[column]
 
+    def dump_pdbs(self, prefix: Optional[str]='', folder: Optional[str]=None):
+        for index, pose, error in self.generator_poses:
+            path = f'{prefix}rank{index}.pdb'
+            if folder:
+                path = os.path.join(folder, f'{prefix}rank{index}.pdb')
+            pose.dump(path)
+
+    # ----------------------------------------
+
+    def get_interactions(self,
+                         pose: pyrosetta.Pose,
+                         chain_id: int,
+                         threshold: float = 3.) -> pr_rs.ResidueVector:
+        chain_sele = pr_rs.ChainSelector(chain_id)
+        other_chains_sele = pr_rs.NotResidueSelector(chain_sele)
+        cc_sele = pr_rs.CloseContactResidueSelector()
+        cc_sele.central_residue_group_selector(other_chains_sele)
+        cc_sele.threshold(float(threshold))
+        other_cc_sele = pr_rs.AndResidueSelector(chain_sele, cc_sele)
+        return pr_rs.ResidueVector(other_cc_sele.apply(pose))
+
+    def find_interface_residues(self):
+        if 'N_interchain_residues_1' in self.scores:
+            return  # already run
+        assert self.poses, 'No poses loaded yet!'
+        assert self.poses[1].num_chains() > 1, 'Single chain!'
+        self.scores['interchain_residues_1'] = self.scores['rank'].apply(lambda rank: self.get_interactions(self.poses[rank], 1))
+        self.scores['interchain_residues_2'] = self.scores['rank'].apply(lambda rank: self.get_interactions(self.poses[rank], 2))
+        self.scores['N_interchain_residues_1'] = self.scores['interchain_residues_1'].apply(len)
+        self.scores['N_interchain_residues_2'] = self.scores['interchain_residues_2'].apply(len)
+
     def _get_median_interface_bfactor(self, pose, residues):
         pbd_info = pose.pdb_info()
         bfactors = [pbd_info.bfactor(r, pose.residue(r).atom_index('CA')) for r in residues]
-        return np.array(bfactors).median()
+        return np.median(bfactors)
 
     def get_median_interface_bfactors(self):
-        for i, row in self.details['interface_pLDDT'].iterrows():
+        self.find_interface_residues()
+        for i, row in self.scores.iterrows():
             residues = list(row.interchain_residues_1) + list(row.interchain_residues_2)
             pose = self.poses[row['rank']] # ``row.rank`` is a function, just like ``row.name``.
             return self._get_median_interface_bfactor(pose, residues)
