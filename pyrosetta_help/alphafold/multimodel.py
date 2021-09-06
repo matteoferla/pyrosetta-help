@@ -98,7 +98,7 @@ class AF2NotebookAnalyser:
     def constrain(self):
         if self.poses is None:
             raise ValueError('Load poses first.')
-        for index, pose, error in self.generator_poses:
+        for index, pose, error in self._generator_poses():
             add_pae_constraints(pose, error)
 
     def relax(self, cycles:int=3):
@@ -107,7 +107,7 @@ class AF2NotebookAnalyser:
         scorefxn = pyrosetta.get_fa_scorefxn()
         ap_st = pyrosetta.rosetta.core.scoring.ScoreType.atom_pair_constraint
         scorefxn.set_weight(ap_st, 1)
-        for index, pose, error in self.generator_poses:
+        for index, pose, error in self._generator_poses():
             relax = pyrosetta.rosetta.protocols.relax.FastRelax(scorefxn, cycles)
             relax.apply(pose)
         # Add dG
@@ -140,7 +140,7 @@ class AF2NotebookAnalyser:
             self.scores[column] = newdata[column]
 
     def dump_pdbs(self, prefix: Optional[str]='', folder: Optional[str]=None):
-        for index, pose, error in self.generator_poses:
+        for index, pose, error in self._generator_poses():
             path = f'{prefix}rank{index}.pdb'
             if folder:
                 path = os.path.join(folder, f'{prefix}rank{index}.pdb')
