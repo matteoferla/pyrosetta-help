@@ -8,6 +8,8 @@ import pyrosetta
 pr_rs = pyrosetta.rosetta.core.select.residue_selector
 from .retrieval import reshape_errors
 from .constraints import add_pae_constraints
+from ..common_ops import pose_from_file
+import pickle
 
 
 class AF2NotebookAnalyser:
@@ -111,12 +113,12 @@ class AF2NotebookAnalyser:
             relax = pyrosetta.rosetta.protocols.relax.FastRelax(scorefxn, cycles)
             relax.apply(pose)
         # Add dG
+        scorefxn.set_weight(ap_st, 0)
         self.scores['dG'] = self.scores['rank'].apply(lambda rank: scorefxn(self.poses[rank]))
 
     def constrain_and_relax(self, cycles:int=3):
         self.constrain()
         self.relax(cycles)
-
 
     def calculate_interface(self, interface = 'A_B'):
         self.get_median_interface_bfactors()
@@ -139,6 +141,8 @@ class AF2NotebookAnalyser:
         for column in newdata.columns:
             self.scores[column] = newdata[column]
 
+    # ------------------------------------------------------------------------
+
     def dump_pdbs(self, prefix: Optional[str]='', folder: Optional[str]=None):
         for index, pose, error in self._generator_poses():
             path = f'{prefix}rank{index}.pdb'
@@ -146,7 +150,25 @@ class AF2NotebookAnalyser:
                 path = os.path.join(folder, f'{prefix}rank{index}.pdb')
             pose.dump(path)
 
-    # ----------------------------------------
+    def dump(self, folder:str):
+        self.scores.to_csv(os.path.join(folder, 'scores.csv'))
+        self.dump_pdbs(folder=folder)
+        with open(os.path.join(folder, 'errors.p', 'w')) as fh:
+            pickle.dump(self.errors, fh)
+
+    @classmethod
+    def load(cls, folder: str, params=()):
+        self = cls(folder=folder, load_poses=False)
+        self.folder = folder
+        self.scores = pd.read_csv(os.path.join(folder, 'scores.csv'), index_col=0)
+        valids = [filename for filename in os.listdir(folder) if '.pdb' in filename]
+        ranker = lambda filename: int(re.search(r'rank(\d+)\.pdb', filename).group(1))
+        self.poses = {ranker(filename): pose_from_file(filename, params) for filename in valids}
+        with open(os.path.join(folder, 'errors.p', 'r')) as fh:
+            self.errors = pickle.load(fh)
+        return self
+
+    # ----------------------------------------------------
 
     def get_interactions(self,
                          pose: pyrosetta.Pose,
