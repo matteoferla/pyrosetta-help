@@ -21,12 +21,15 @@ class AF2NotebookAnalyser:
         self.relaxed_poses = dict()
         self.original_poses = dict()
         self.phospho_poses = dict()
-        self.poses = dict(relaxed=self.relaxed_poses,
-                          original=self.original_poses,
-                          phospho=self.phospho_poses)
+        self.pose_groupnames = ['relaxed', 'original', 'phospho']
         if load_poses:
             self.original_poses = self.get_poses()
         self.errors = self.get_errors()
+
+    @property
+    def poses(self):
+        # to alter change pose_groupnames and add the required *_poses attributes, I guess.
+        return {groupname: getattr(self, groupname+'_poses') for groupname in self.pose_groupnames}
 
     def make_AF2_dataframe(self) -> pd.DataFrame:
         """
@@ -108,6 +111,20 @@ class AF2NotebookAnalyser:
         for index, pose, error in self._generator_poses(groupname):
             add_pae_constraints(pose, error)
 
+    def sidechain_relax(self, cycles:int=5):
+        vanilla_scorefxn = pyrosetta.get_fa_scorefxn()
+        ap_st = pyrosetta.rosetta.core.scoring.ScoreType.atom_pair_constraint
+        vanilla_scorefxn.set_weight(ap_st, 0)
+        movemap = pyrosetta.MoveMap()
+        movemap.set_bb(False)
+        movemap.set_chi(True)
+        chirelax = pyrosetta.rosetta.protocols.relax.FastRelax(vanilla_scorefxn, cycles)
+        chirelax.set_movemap(movemap)
+        for index, pose, error in self._generator_poses('original'):
+            if index not in self.relaxed_poses:
+                self.relaxed_poses[index] = pose.clone()
+            chirelax.apply(self.relaxed_poses[index])
+
     def relax(self, cycles: int = 3):
         if self.original_poses is None:
             raise ValueError('Load poses first.')
@@ -115,7 +132,8 @@ class AF2NotebookAnalyser:
         ap_st = pyrosetta.rosetta.core.scoring.ScoreType.atom_pair_constraint
         scorefxn.set_weight(ap_st, 1)
         for index, pose, error in self._generator_poses('original'):
-            self.relaxed_poses[index] = pose.clone()
+            if index not in self.relaxed_poses:
+                self.relaxed_poses[index] = pose.clone()
             relax = pyrosetta.rosetta.protocols.relax.FastRelax(scorefxn, cycles)
             relax.apply(self.relaxed_poses[index])
         # Add dG
@@ -123,6 +141,7 @@ class AF2NotebookAnalyser:
         self.scores['dG'] = self.scores['rank'].apply(lambda rank: scorefxn(self.relaxed_poses[rank]))
 
     def constrain_and_relax(self, cycles: int = 3):
+        self.sidechain_relax()
         self.constrain()
         self.relax(cycles)
 
@@ -149,21 +168,30 @@ class AF2NotebookAnalyser:
 
     # ------------------------------------------------------------------------
 
+    def _parse_folder_argument(self, folder):
+        if folder and not os.path.exists(folder):
+            # user specified non existant folder.
+            os.mkdir(folder)
+            return folder
+        elif folder:
+            return folder
+        else:
+            # use original folder.
+            return self.folder
+
+
+
     def dump_pdbs(self,
                   groupname: str='relaxed',
-                  prefix: Optional[str] = '',
-                  folder: Optional[str] = None):
+                  folder: Optional[str] = None,
+                  prefix: Optional[str] = ''):
         for index, pose, error in self._generator_poses(groupname):
-            path = f'{prefix}rank{index}.pdb'
-            if folder:
-                path = os.path.join(folder, f'{prefix}{groupname}_rank{index}.pdb')
-            if not os.path.exists(folder):
-                os.mkdir(folder)
+            folder = self._parse_folder_argument(folder)
+            path = os.path.join(folder, f'{prefix}rank_{index}_pyrosetta_{groupname}.pdb')
             pose.dump_pdb(path)
 
-    def dump(self, folder: str):
-        if not os.path.exists(folder):
-            os.mkdir(folder)
+    def dump(self, folder: Optional[str]=None):
+        folder = self._parse_folder_argument(folder)
         self.scores.to_csv(os.path.join(folder, 'scores.csv'))
         self.dump_pdbs(folder=folder)
         with open(os.path.join(folder, 'errors.p', 'w')) as fh:
@@ -173,9 +201,8 @@ class AF2NotebookAnalyser:
                 self.dump_pdbs(groupname=groupname, folder=folder)
 
     @classmethod
-    def load(cls, folder: str, params=()):
-        self = cls(folder=folder, load_poses=False)
-        self.folder = folder
+    def load(cls, folder: str, load_poses=False, params=()):
+        self = cls(folder=folder, load_poses=load_poses)
         self.scores = pd.read_csv(os.path.join(folder, 'scores.csv'), index_col=0)
         valids = [filename for filename in os.listdir(folder) if '.pdb' in filename]
         ranker = lambda filename: int(re.search(r'rank(\d+)\.pdb', filename).group(1))
