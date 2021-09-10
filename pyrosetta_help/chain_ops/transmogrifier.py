@@ -1,4 +1,3 @@
-from Bio import pairwise2
 from typing import Tuple, List, Union
 import re
 from .chain_ops import ChainOps
@@ -24,6 +23,7 @@ class Transmogrifier(ChainOps):
         """
         Align the human seq to the mouse and store it the chain dict
         """
+        from Bio import pairwise2
         chain = self.chains[chain_selection]
         alignments = pairwise2.align.globalxs(chain[f'{self.wanted_label}_sequence'],
                                               chain[f'{self.owned_label}_sequence'],

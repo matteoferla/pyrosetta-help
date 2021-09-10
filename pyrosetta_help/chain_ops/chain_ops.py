@@ -1,5 +1,4 @@
-from Bio import pairwise2
-from typing import Tuple, List, Union
+from typing import *
 import re, json
 
 class ChainOps:
