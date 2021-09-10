@@ -80,8 +80,8 @@ def add_rosetta(self: nglview.widget.NGLWidget,
 def make_pose_comparison(self: nglview.widget.NGLWidget,
                          first_pose: pyrosetta.Pose,
                          second_pose: pyrosetta.Pose,
-                         first_color: str = '#F8766D',
-                         second_color: str = '#00B4C4'):
+                         first_color: str = '#00B4C4',
+                         second_color: str = '#F8766D'):
     """
     Adds two objects, the first colored by default in #00B4C4, which is turquoise,
      while the second #F8766D, which is salmon.
@@ -124,4 +124,4 @@ nglview.widget.NGLWidget.selector_to_ngl = selector_to_ngl
 nglview.widget.NGLWidget.add_selector = add_selector
 nglview.widget.NGLWidget.add_rosetta = add_rosetta
 nglview.widget.NGLWidget.add_constraints = add_constraints
-nglview.make_pose_comparison = make_pose_comparison
+nglview.widget.NGLWidget.make_pose_comparison = make_pose_comparison
