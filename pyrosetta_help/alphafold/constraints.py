@@ -1,4 +1,4 @@
-__all__ = ['add_pae_constraints', 'add_stretch_constraint']
+__all__ = ['add_pae_constraints', 'add_stretch_constraint', 'get_distance_matrix', 'make_pae_constraint']
 
 import pyrosetta
 import numpy as np
@@ -7,10 +7,12 @@ from typing import *
 
 def add_pae_constraints(pose: pyrosetta.Pose,
                         errors: np.ndarray,
-                        cutoff: float = 5,
+                        cutoff: float = 12,
                         weight: float = 1,
+                        adjecency_threshold=5,
                         blank: bool = True):
     """
+
     Add constrains to the pose based on the errors matrix.
     NB. this matrix is a reshaped version of what AF2 returns.
 
@@ -22,30 +24,49 @@ def add_pae_constraints(pose: pyrosetta.Pose,
     To find out how many were added:
 
     >>> len(pose.constraint_set().get_all_constraints())
+
+    :param pose:
+    :param errors:
+    :param cutoff:
+    :param weight: this is added to the SD part so squared inverse.
+    :param adjecency_threshold: min residue separation of sequence neighbours
+    :param blank:
+    :return:
     """
-    get_ca = lambda r, i: pyrosetta.AtomID(atomno_in=r.atom_index('CA'), rsd_in=i)
-    HarmonicFunc = pyrosetta.rosetta.core.scoring.func.HarmonicFunc
-    AtomPairConstraint = pyrosetta.rosetta.core.scoring.constraints.AtomPairConstraint
     cs = pyrosetta.rosetta.core.scoring.constraints.ConstraintSet()
     if not blank:
         previous = pyrosetta.rosetta.core.scoring.constraints.ConstraintSet().get_all_constraints()
         for con in previous:
             cs.add_constraint(con)
     for r1_idx, r2_idx in np.argwhere(errors < cutoff):
+        if abs(r1_idx - r2_idx) < adjecency_threshold:
+            continue # skip neighbours
+        elif r1_idx <= r2_idx:
+            continue # add once.
         d_error = errors[r1_idx, r2_idx]
-        residue1 = pose.residue(r1_idx + 1)
-        ca1_atom = get_ca(residue1, r1_idx + 1)
-        residue2 = pose.residue(r2_idx + 1)
-        ca2_atom = get_ca(residue2, r2_idx + 1)
-        ca1_xyz = residue1.xyz(ca1_atom.atomno())
-        ca2_xyz = residue2.xyz(ca2_atom.atomno())
-        d = (ca1_xyz - ca2_xyz).norm()
-        apc = AtomPairConstraint(ca1_atom, ca2_atom, HarmonicFunc(x0_in=d, sd_in=d_error * weight))
+        apc = make_pae_constraint(pose, r1_idx + 1, r2_idx + 1, d_error, weight)
         cs.add_constraint(apc)
     setup = pyrosetta.rosetta.protocols.constraint_movers.ConstraintSetMover()
     setup.constraint_set(cs)
     setup.apply(pose)
     return cs
+
+def make_pae_constraint(pose,
+                        residue1_pose_idx:int, # one indexed.
+                        residue2_pose_idx:int, # one indexed.
+                        error:float,
+                        weight:float=1):
+    get_ca = lambda r, i: pyrosetta.AtomID(atomno_in=r.atom_index('CA'), rsd_in=i)
+    HarmonicFunc = pyrosetta.rosetta.core.scoring.func.HarmonicFunc
+    AtomPairConstraint = pyrosetta.rosetta.core.scoring.constraints.AtomPairConstraint
+    residue1 = pose.residue(residue1_pose_idx)
+    ca1_atom = get_ca(residue1, residue1_pose_idx)
+    residue2 = pose.residue(residue2_pose_idx)
+    ca2_atom = get_ca(residue2, residue2_pose_idx)
+    ca1_xyz = residue1.xyz(ca1_atom.atomno())
+    ca2_xyz = residue2.xyz(ca2_atom.atomno())
+    d = (ca1_xyz - ca2_xyz).norm()
+    return AtomPairConstraint(ca1_atom, ca2_atom, HarmonicFunc(x0_in=d, sd_in=error * weight))
 
 
 def add_stretch_constraint(pose: pyrosetta.Pose,
@@ -84,3 +105,13 @@ def add_stretch_constraint(pose: pyrosetta.Pose,
     con = AtomPairConstraint(first_ca, last_ca, fun)
     pose.constraint_set().add_constraint(con)
     return con
+
+def get_distance_matrix(pose):
+    distances = np.zeros((pose.total_residue(), pose.total_residue()))
+    ca_xyzs = [pose.residue(r).xyz('CA') for r in range(1, pose.total_residue() + 1)]
+    for i in range(len(ca_xyzs)):
+        for j in range(i):
+            d = ca_xyzs[i].distance(ca_xyzs[j])
+            distances[i, j] = d
+            distances[j, i] = d
+    return distances
