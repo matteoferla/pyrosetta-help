@@ -105,11 +105,11 @@ class AF2NotebookAnalyser:
         assert len(self.poses[groupname]), f'The group {groupname} is not loaded'
         return ((index, self.poses[groupname][index], self.errors[index]) for index in self.errors)
 
-    def constrain(self, groupname:str='relaxed'):
+    def constrain(self, groupname:str='relaxed', **add_pae_constraints_arguments):
         if len(self.original_poses) == 0:
             raise ValueError('Load poses first.')
         for index, pose, error in self._generator_poses(groupname):
-            add_pae_constraints(pose, error)
+            add_pae_constraints(pose, error, **add_pae_constraints_arguments)
 
     def sidechain_relax(self, cycles:int=5):
         vanilla_scorefxn = pyrosetta.get_fa_scorefxn()
