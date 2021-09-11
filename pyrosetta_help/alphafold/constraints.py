@@ -8,6 +8,7 @@ from typing import *
 def add_pae_constraints(pose: pyrosetta.Pose,
                         errors: np.ndarray,
                         cutoff: float = 12,
+                        tolerance: Optional[float] = None,
                         weight: float = 1,
                         adjecency_threshold=5,
                         blank: bool = True):
@@ -28,6 +29,7 @@ def add_pae_constraints(pose: pyrosetta.Pose,
     :param pose:
     :param errors:
     :param cutoff:
+    :param tolerance: if None Harmonic, if value, tollerance of FlatHarmonic
     :param weight: this is added to the SD part so squared inverse.
     :param adjecency_threshold: min residue separation of sequence neighbours
     :param blank:
@@ -44,7 +46,12 @@ def add_pae_constraints(pose: pyrosetta.Pose,
         elif r1_idx <= r2_idx:
             continue # add once.
         d_error = errors[r1_idx, r2_idx]
-        apc = make_pae_constraint(pose, r1_idx + 1, r2_idx + 1, d_error, weight)
+        apc = make_pae_constraint(pose=pose,
+                                  residue1_pose_idx=r1_idx + 1,
+                                  residue2_pose_idx=r2_idx + 1,
+                                  error=d_error,
+                                  weight=weight,
+                                  tolerance=tolerance)
         cs.add_constraint(apc)
     setup = pyrosetta.rosetta.protocols.constraint_movers.ConstraintSetMover()
     setup.constraint_set(cs)
@@ -55,9 +62,12 @@ def make_pae_constraint(pose,
                         residue1_pose_idx:int, # one indexed.
                         residue2_pose_idx:int, # one indexed.
                         error:float,
+                        tolerance: Optional[float] = None,
                         weight:float=1):
     get_ca = lambda r, i: pyrosetta.AtomID(atomno_in=r.atom_index('CA'), rsd_in=i)
+    FlatHarmonicFunc = pyrosetta.rosetta.core.scoring.func.FlatHarmonicFunc
     HarmonicFunc = pyrosetta.rosetta.core.scoring.func.HarmonicFunc
+
     AtomPairConstraint = pyrosetta.rosetta.core.scoring.constraints.AtomPairConstraint
     residue1 = pose.residue(residue1_pose_idx)
     ca1_atom = get_ca(residue1, residue1_pose_idx)
@@ -66,7 +76,11 @@ def make_pae_constraint(pose,
     ca1_xyz = residue1.xyz(ca1_atom.atomno())
     ca2_xyz = residue2.xyz(ca2_atom.atomno())
     d = (ca1_xyz - ca2_xyz).norm()
-    return AtomPairConstraint(ca1_atom, ca2_atom, HarmonicFunc(x0_in=d, sd_in=error * weight))
+    if not tolerance:
+        fun = HarmonicFunc(x0_in=d, sd_in=error * weight)
+    else:
+        fun = FlatHarmonicFunc(x0_in=d, sd_in=error * weight, tol_in=tolerance)
+    return AtomPairConstraint(ca1_atom, ca2_atom, fun)
 
 
 def add_stretch_constraint(pose: pyrosetta.Pose,
