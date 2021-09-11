@@ -8,9 +8,10 @@ import pyrosetta
 
 pr_rs = pyrosetta.rosetta.core.select.residue_selector
 from .retrieval import reshape_errors
-from .constraints import add_pae_constraints
+from .constraints import add_pae_constraints, add_interchain_pae_constraints
 from ..common_ops import pose_from_file
 import pickle
+
 
 class AF2NotebookAnalyser:
 
@@ -29,7 +30,7 @@ class AF2NotebookAnalyser:
     @property
     def poses(self):
         # to alter change pose_groupnames and add the required *_poses attributes, I guess.
-        return {groupname: getattr(self, groupname+'_poses') for groupname in self.pose_groupnames}
+        return {groupname: getattr(self, groupname + '_poses') for groupname in self.pose_groupnames}
 
     def make_AF2_dataframe(self) -> pd.DataFrame:
         """
@@ -105,13 +106,14 @@ class AF2NotebookAnalyser:
         assert len(self.poses[groupname]), f'The group {groupname} is not loaded'
         return ((index, self.poses[groupname][index], self.errors[index]) for index in self.errors)
 
-    def constrain(self, groupname:str='relaxed', **add_pae_constraints_arguments):
+    def constrain(self, groupname: str = 'relaxed', **add_pae_constraints_arguments):
         if len(self.original_poses) == 0:
             raise ValueError('Load poses first.')
         for index, pose, error in self._generator_poses(groupname):
             add_pae_constraints(pose, error, **add_pae_constraints_arguments)
+            add_interchain_pae_constraints(pose, error, cutoff=15)
 
-    def sidechain_relax(self, cycles:int=5):
+    def sidechain_relax(self, cycles: int = 5):
         vanilla_scorefxn = pyrosetta.get_fa_scorefxn()
         ap_st = pyrosetta.rosetta.core.scoring.ScoreType.atom_pair_constraint
         vanilla_scorefxn.set_weight(ap_st, 0)
@@ -184,10 +186,8 @@ class AF2NotebookAnalyser:
             # use original folder.
             return self.folder
 
-
-
     def dump_pdbs(self,
-                  groupname: str='relaxed',
+                  groupname: str = 'relaxed',
                   folder: Optional[str] = None,
                   prefix: Optional[str] = ''):
         for index, pose, error in self._generator_poses(groupname):
@@ -195,7 +195,7 @@ class AF2NotebookAnalyser:
             path = os.path.join(folder, f'{prefix}rank_{index}_pyrosetta_{groupname}.pdb')
             pose.dump_pdb(path)
 
-    def dump(self, folder: Optional[str]=None):
+    def dump(self, folder: Optional[str] = None):
         folder = self._parse_folder_argument(folder)
         self.scores.to_csv(os.path.join(folder, 'scores.csv'))
         self.dump_pdbs(folder=folder)
