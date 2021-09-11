@@ -11,6 +11,7 @@ from .retrieval import reshape_errors
 from .constraints import add_pae_constraints, add_interchain_pae_constraints
 from ..common_ops import pose_from_file
 import pickle
+from collections import defaultdict
 
 
 class AF2NotebookAnalyser:
@@ -253,3 +254,107 @@ class AF2NotebookAnalyser:
             residues = list(row.interchain_residues_1) + list(row.interchain_residues_2)
             pose = self.relaxed_poses[row['rank']]  # ``row.rank`` is a function, just like ``row.name``.
             return self._get_median_interface_bfactor(pose, residues)
+
+    # -------------------------------------------------
+
+    @classmethod
+    def parse_phosphosite(cls, raw: str, minimum: int = 1, maximum: int = -1):
+        """
+        A rubbish method to convert copy-pasted Phosphosite web table.
+
+        :param raw:
+        :param minimum:
+        :param maximum:
+        :return:
+        """
+        if maximum < 1:
+            maximum = float('nan')
+        assert '-p' in raw, f'Is this what you wanted in your clipboard: {raw}'
+        ptms = defaultdict(list)
+        for resn, resi, mod in re.findall('(\w)(\d+)\-(\w+)', raw):
+            if int(resi) < minimum or int(resi) > maximum:
+                continue
+            ptms[mod].append(int(resi))
+        return ptms
+
+    def _apply_patch(self, pose, patch, residues, restriction=None):
+        MutateResidue = pyrosetta.rosetta.protocols.simple_moves.MutateResidue
+        valids = []
+        for r in residues:
+            if r == 0:
+                continue  # missing
+            present_res = pose.residue(r).name3()
+            new_res = f"{present_res.upper()}:{patch}"
+            if restriction is not None and present_res.upper() != restriction.upper():
+                continue
+            MutateResidue(target=r, new_res=new_res).apply(pose)
+            valids.append(r)
+        return valids
+
+    def _phospho_pose(self, pose, scorefxn, cycles=3, **modifications):
+        valids = []
+        for ptm, residues in modifications.items():
+            if ptm == 'ub':
+                continue  # What is a proxy for ubiquitination??
+            elif ptm == 'p':
+                v = self._apply_patch(pose,
+                                      patch='phosphorylated',
+                                      residues=residues)
+                valids.extend(v)
+            elif ptm == 'ac':
+                v = self._apply_patch(pose,
+                                      patch='acetylated',
+                                      residues=residues)
+                valids.extend(v)
+            elif ptm == 'm1':
+                v = self._apply_patch(pose,
+                                      patch='monomethylated',
+                                      residues=residues,
+                                      restriction='LYS')  # monomethylarginine (NMM) will segfault
+                valids.extend(v)
+            elif ptm == 'm2':
+                v = self._apply_patch(pose,
+                                      patch='dimethylated',
+                                      residues=residues,
+                                      restriction='LYS')  # dimethylarginine (DA2) will segfault
+                valids.extend(v)
+            elif ptm == 'm3':
+                v = self._apply_patch(pose,
+                                      patch='trimethylated',
+                                      residues=residues,
+                                      restriction='LYS')  # is trimethylarginine a thing?
+                valids.extend(v)
+            else:
+                continue  # no Gal
+                # raise ValueError(f'What is {ptm}?')
+        # minimise
+        resi_sele = pyrosetta.rosetta.core.select.residue_selector.ResidueIndexSelector()
+        for r in valids:
+            resi_sele.append_index(r)
+        if len(valids) == 0:
+            return valids
+        neigh_sele = pyrosetta.rosetta.core.select.residue_selector.NeighborhoodResidueSelector(resi_sele, 7, True)
+        neighbour_vector = neigh_sele.apply(pose)
+        relax = pyrosetta.rosetta.protocols.relax.FastRelax(scorefxn, cycles)
+        movemap = pyrosetta.MoveMap()
+        movemap.set_bb(neighbour_vector)
+        movemap.set_chi(neighbour_vector)
+        relax.set_movemap(movemap)
+        relax.apply(pose)
+        return valids
+
+    def make_phosphorylated(self,
+                            pdb_ptms: dict,
+                            chain: str = 'A',
+                            cycles: int = 3):
+        # convert PTM to pose
+        pdb_info = self.original_poses[1].pdb_info()
+        convert = lambda pdb_residues: [pdb_info.pdb2pose(res=r, chain=chain) for r in pdb_residues]
+        ptms = {k: convert(pdb_residues) for k, pdb_residues in pdb_ptms.items()}
+        # scorefunction
+        scorefxn = pyrosetta.get_fa_scorefxn()
+        ap_st = pyrosetta.rosetta.core.scoring.ScoreType.atom_pair_constraint
+        scorefxn.set_weight(ap_st, 1)
+        for index, pose in self._generator_poses('relaxed'):
+            self.phospho_poses[index] = pose.clone()
+            self._phospho_pose(self.phospho_poses[index], scorefxn, cycles=cycles, **ptms)
