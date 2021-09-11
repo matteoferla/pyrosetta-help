@@ -135,6 +135,11 @@ class AF2NotebookAnalyser:
             if index not in self.relaxed_poses:
                 self.relaxed_poses[index] = pose.clone()
             relax = pyrosetta.rosetta.protocols.relax.FastRelax(scorefxn, cycles)
+            movemap = pyrosetta.MoveMap()
+            movemap.set_bb(True)
+            movemap.set_chi(True)
+            movemap.set_jump(True)
+            relax.set_movemap(movemap)
             relax.apply(self.relaxed_poses[index])
         # Add dG
         scorefxn.set_weight(ap_st, 0)
