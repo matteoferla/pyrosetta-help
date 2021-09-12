@@ -26,7 +26,7 @@ description = 'A variety of functions to make working with Pyrosetta easier.'
 
 setup(
     name='pyrosetta_help',
-    version='0.3.3',
+    version='0.3.4',
     packages=find_packages(),
     url='https://github.com/matteoferla/pyrosetta_help',
     license='MIT',
