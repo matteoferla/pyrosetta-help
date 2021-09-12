@@ -355,6 +355,6 @@ class AF2NotebookAnalyser:
         scorefxn = pyrosetta.get_fa_scorefxn()
         ap_st = pyrosetta.rosetta.core.scoring.ScoreType.atom_pair_constraint
         scorefxn.set_weight(ap_st, 1)
-        for index, pose in self._generator_poses('relaxed'):
+        for index, pose, error in self._generator_poses('relaxed'):
             self.phospho_poses[index] = pose.clone()
             self._phospho_pose(self.phospho_poses[index], scorefxn, cycles=cycles, **ptms)
