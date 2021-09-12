@@ -8,7 +8,7 @@ if sys.version_info.major != 3 or sys.version_info.minor < 6:
 
 # ---------- Non pip modules  ------------------------------------------------------------------------------------------
 
-if not util.find_spec('rdkit'):
+if not util.find_spec('pyrosetta'):
     warn('This 3.6+ script **requires** pyrosetta, which has to be downloaded from ' +
          'the Rosetta software site due to licencing.')
 
@@ -26,7 +26,7 @@ description = 'A variety of functions to make working with Pyrosetta easier.'
 
 setup(
     name='pyrosetta_help',
-    version='0.3.1',
+    version='0.3.3',
     packages=find_packages(),
     url='https://github.com/matteoferla/pyrosetta_help',
     license='MIT',
