@@ -179,8 +179,17 @@ class LigandNicker:
         # select the ligands that are wanted.
         # set_residue_names does not like custom residue types.
         wanted_ligands = {c.rjust(3) for c in self.wanted_ligands}
-        resn_sele = pr_rs.ResidueNameSelector()
-        resn_sele.set_residue_name3(','.join(wanted_ligands))
+        # todo resolve this:
+        # ResidueNameSelector seems to not like custom residues in certain cases:
+        # ResidueNameSelector: PO4 is not a valid residue type name.
+        # resn_sele = pr_rs.ResidueNameSelector()
+        # resn_sele.set_residue_name3(','.join(wanted_ligands))
+        # shitty brutal way for now:
+        resi_sele = pr_rs.ResidueIndexSelector()
+        for r in range(1, 1+self.donor_pose.total_residue()):
+            if self.donor_pose.residue(r).name3() in wanted_ligands:
+                resi_sele.append_index(r)
+        # end of shitty hack.
         # filter for those within 3A of chain of interest
         # define extended neighbours
         chain_sele = pyrosetta.rosetta.core.select.residue_selector.ChainSelector(self.donor_chain)
