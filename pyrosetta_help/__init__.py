@@ -6,6 +6,7 @@ from .common_ops import *
 from .init_ops import *
 from .threading import *
 from .alphafold import *
+from .nick_ligands import *
 # threading has __all__ in __init__
 # alphafold has __all__ in some files
 # init_ops.__init__ imports only needed methods
