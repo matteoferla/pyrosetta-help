@@ -37,7 +37,7 @@ vector1_string = pyrosetta.rosetta.utility.vector1_string
 def make_blank_pose(params_filenames: Optional[Union[vector1_string, List[str]]] = None) \
         -> pyrosetta.Pose:
     """
-    Returns an empty pose, but with params.
+    Returns an empty pose, but with params from files.
 
     :param params_filenames:
     :return:
