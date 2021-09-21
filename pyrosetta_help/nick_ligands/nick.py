@@ -60,7 +60,7 @@ class LigandNicker:
                                          force_parameterisation=force_parameterisation,
                                          neutralise_params=neutralise_params,
                                          save_params=save_params,
-                                         override=override)
+                                         overriding_params=overriding_params)
         self.acceptor_pose = None
 
     @classmethod

@@ -47,7 +47,7 @@ def make_blank_pose(params_filenames: Optional[Union[vector1_string, List[str]]]
         pyrosetta.generate_nonstandard_residue_set(pose, params_filenames)
     if params_filenames and isinstance(params_filenames, list):
         params_filenames2 = vector1_string()
-        params_filenames2.extend(params_filenames)
+        params_filenames2.extend([f for f in params_filenames if f])
         pyrosetta.generate_nonstandard_residue_set(pose, params_filenames2)
     elif params_filenames:
         raise TypeError(f'Unexpected type {type(params_filenames)}')
