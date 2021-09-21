@@ -1,8 +1,11 @@
 import pyrosetta
-from rdkit_to_params import Params, neutralise
-import pyrosetta_help as ph
+try:
+    from rdkit_to_params import Params, neutralise
+except ModuleNotFoundError:
+    pass
 from typing import *
 from ..common_ops.downloads import download_pdb
+from ..common_ops.utils import make_blank_pose
 
 import warnings, requests
 
@@ -137,7 +140,7 @@ class LigandNicker:
                   overriding_params=()) -> pyrosetta.Pose:
         if pyrosetta.rosetta.basic.options.get_boolean_option('in:file:load_PDB_components'):
             raise ValueError('load_PDB_components is True. Run ``pyrosetta.pose_from_filename`` then.')
-        pose = ph.make_blank_pose(overriding_params)
+        pose = make_blank_pose(overriding_params)
         rts = pose.residue_type_set_for_pose()
         for target_ligand in self.wanted_ligands:
             if not rts.has_name3(target_ligand) or force_parameterisation:
