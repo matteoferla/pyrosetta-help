@@ -98,7 +98,7 @@ def _prep_pose(pdbblock: str,
                 pose.conformation().reset_residue_type_set_for_conf(rts)
                 rts = pose.residue_type_set_for_pose()  # playing it ubersafe
                 assert rts.has_name3(target_ligand)
-        pyrosetta.rosetta.core.import_pose.pose_from_pdbstring(acceptor_pose, pdbblock)
+        pyrosetta.rosetta.core.import_pose.pose_from_pdbstring(pose, pdbblock)
         # pyrosetta.pose_from_file(pose, pdb_filename)
         return pose
     except RuntimeError as err:
