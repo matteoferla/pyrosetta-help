@@ -127,14 +127,15 @@ class MutantScorer:
                    ref_interface_dG: Dict,
                    final_func: Optional[Callable] = None,
                    movement: bool=False) -> dict:
-        wt_score = self.scorefxn(reference)
-        mut_score = self.scorefxn(variant)
+        unweighted_scorefxn = self.get_unweighted_scorefxn()
+        wt_score = unweighted_scorefxn(reference)
+        mut_score = unweighted_scorefxn(variant)
         neigh_vector = self.get_neighbour_vector(pose=reference,
                                                  resi=mutation.pose_resi,
                                                  chain=None,  # if chain is present, it assumes resi is pdb number.
                                                  distance=distance)
-        neigh_wt_score = self.scorefxn.get_sub_score(reference, neigh_vector)
-        neigh_mut_score = self.scorefxn.get_sub_score(variant, neigh_vector)
+        neigh_wt_score = unweighted_scorefxn.get_sub_score(reference, neigh_vector)
+        neigh_mut_score = unweighted_scorefxn.get_sub_score(variant, neigh_vector)
         data = {'model': self.modelname,
                 'mutation': str(mutation),
                 'complex_ddG': mut_score - wt_score,
@@ -198,6 +199,15 @@ class MutantScorer:
         if not os.path.exists(self.output_folder):
             os.mkdir(self.output_folder)
 
+    def get_unweighted_scorefxn(self):
+        unweighted_scorefxn = self.scorefxn.clone()
+        ST = pyrosetta.rosetta.core.scoring.ScoreType
+        unweighted_scorefxn.set_weight(ST.atom_pair, 0)
+        unweighted_scorefxn.set_weight(ST.angle_constraint, 0)
+        unweighted_scorefxn.set_weight(ST.coordinate_constraint, 0)
+        unweighted_scorefxn.set_weight(ST.dihedral_constrain, 0)
+        return unweighted_scorefxn
+
 
     def score_mutations(self,
                         mutations,
@@ -213,7 +223,8 @@ class MutantScorer:
         ref_interface_dG = {}
         scores = {}  # not written to csv file.
         if not preminimise:
-            n = self.scorefxn(self.pose)
+            # touch the energies:
+            self.get_unweighted_scorefxn()(self.pose)
             for interface_name, interface_scheme in interfaces:
                 ref_interface_dG[interface_name] = self.score_interface(self.pose, interface_scheme)['interface_dG']
         else:
@@ -266,6 +277,7 @@ class MutantScorer:
                     ) -> pyrosetta.Pose:
         """
         Make a point mutant (``A23D``).
+
         :param pose: pose
         :param mutation:
         :param chain:
@@ -336,6 +348,7 @@ class MutantScorer:
         movemap.set_chi(False)
         movemap.set_chi(allow_chi=n)
         movemap.set_jump(False)
+
         relax = pyrosetta.rosetta.protocols.relax.FastRelax(self.scorefxn, cycles)
         relax.set_movemap(movemap)
         relax.set_movemap_disables_packing_of_fixed_chi_positions(True)
