@@ -5,9 +5,17 @@ Some functions that I keep using over and over as a Python module.
 pip3 install pyrosetta-help
 ```
 
-Also in GitHub are some Markdown files, with some boilerplates.
+~~Also in GitHub are some Markdown files, with some boilerplates.~~
 
+## Colabs
 
+Here are some Colabs notebooks I have put together for AlphaFold2 analyses:
+
+* [Run PyRosetta in Colabs](https://colab.research.google.com/github/matteoferla/pyrosetta_help/blob/main/colabs-pyrosetta.ipynb)
+* [Analysis of dimer output from ColabFold in Colabs](https://colab.research.google.com/github/matteoferla/pyrosetta_help/blob/main/colabs-pyrosetta-dimer.ipynb)
+* [Migrate a ligand in Colabs](https://colab.research.google.com/github/matteoferla/pyrosetta_help/blob/main/colabs-pyrosetta-migrate_ligands.ipynb)
+* Stretch out an alphafold pose — ToDo
+* Add OPM dots to show membrane — ToDo
 
 ## Starting up
 
