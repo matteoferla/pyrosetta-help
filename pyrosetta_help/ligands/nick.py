@@ -1,4 +1,5 @@
 import pyrosetta
+
 try:
     from rdkit_to_params import Params, neutralise
 except ModuleNotFoundError:
@@ -6,6 +7,7 @@ except ModuleNotFoundError:
 from typing import *
 from ..common_ops.downloads import download_pdb
 from ..common_ops.utils import make_blank_pose
+from .load import parameterised_pose_form_file
 
 import warnings, requests
 
@@ -23,6 +25,7 @@ def chain_letter_to_number(letter, pose):
     else:
         raise ValueError
 
+
 class LigandNicker:
     """
     Given a pdb_file (regular initialisation) or code (``.from_pdbcode`` classmethod)
@@ -38,9 +41,9 @@ class LigandNicker:
                  chain: str,
                  wanted_ligands: List[str],
                  force_parameterisation: bool = False,
-                  neutralise_params:bool=True,
-                  save_params:bool=True,
-                  overriding_params=()):
+                 neutralise_params: bool = True,
+                 save_params: bool = True,
+                 overriding_params=()):
         """
         Initialisation loads the donor. ``migrate`` loads the acceptor.
 
@@ -56,11 +59,11 @@ class LigandNicker:
         self.donor_chain = chain
         self.wanted_ligands = wanted_ligands
         self.extra_params = []
-        self.donor_pose = self.load_pose(pdb_filename,
-                                         force_parameterisation=force_parameterisation,
-                                         neutralise_params=neutralise_params,
-                                         save_params=save_params,
-                                         overriding_params=overriding_params)
+        self.donor_pose = parameterised_pose_form_file(pdb_filename=pdb_filename,
+                                                       force_parameterisation=force_parameterisation,
+                                                       neutralise_params=neutralise_params,
+                                                       save_params=save_params,
+                                                       overriding_params=overriding_params)
         self.acceptor_pose = None
 
     @classmethod
@@ -70,7 +73,7 @@ class LigandNicker:
 
     def migrate(self, acceptor_pose: pyrosetta.Pose, acceptor_chain: str = 'A',
                 constrained: bool = True, relaxed: bool = True,
-                relax_radius:int=20, relax_cycles:int=3):
+                relax_radius: int = 20, relax_cycles: int = 3):
         """
         The acceptor pose is the non-empty pose.
 
@@ -131,64 +134,19 @@ class LigandNicker:
         if relaxed:
             self.relax_migrated(distance=relax_radius, cycles=relax_cycles)
 
-    # ---- pose loading, the circutous way to not loose ligand or use PDB_component.
-
-    def load_pose(self, filename,
-                  force_parameterisation: bool = False,
-                  neutralise_params:bool=True,
-                  save_params:bool=True,
-                  overriding_params=()) -> pyrosetta.Pose:
-        if pyrosetta.rosetta.basic.options.get_boolean_option('in:file:load_PDB_components'):
-            raise ValueError('load_PDB_components is True. Run ``pyrosetta.pose_from_filename`` then.')
-        pose = make_blank_pose(overriding_params)
-        rts = pose.residue_type_set_for_pose()
-        for target_ligand in self.wanted_ligands:
-            if not rts.has_name3(target_ligand) or force_parameterisation:
-                params = self.parameterise(target_ligand, neutral=neutralise_params, save=save_params)
-                self.extra_params.append(params)
-                params.add_residuetype(pose)
-        pyrosetta.pose_from_file(pose, filename)
-        assert pose.sequence()
-        return pose
-
-    def parameterise(self, target_ligand: str, neutral: bool = True, save: bool = True) -> Params:
-        GTP_smiles = self.get_smiles(target_ligand)
-        params = Params.from_smiles_w_pdbfile(pdb_file=self.pdb_filename,
-                                              smiles=GTP_smiles,
-                                              proximityBonding=False,
-                                              name=target_ligand)
-        if neutral:
-            mol = neutralise(params.mol)
-            params = Params.from_mol(mol)
-        if save:
-            params.dump(f'{target_ligand}.params')  # safekeeping. Not used.
-        return params
-
-    def get_smiles(self, ligand_code: str) -> str:
-        """
-        Get the smiles of a ligand.
-        Remember that PDBe smiles need to charged to pH 7.
-        """
-        ligand_code = ligand_code.upper()
-        ligand_data = requests.get(f'https://www.ebi.ac.uk/pdbe/api/pdb/compound/summary/{ligand_code}').json()
-        return ligand_data[ligand_code][0]['smiles'][0]['name']
-
     # ---- migrate dependent methods
 
     def get_wanted_selector(self):
         # select the ligands that are wanted.
         # set_residue_names does not like custom residue types.
         wanted_ligands = {c.rjust(3) for c in self.wanted_ligands}
-        # todo resolve this:
-        # ResidueNameSelector seems to not like custom residues in certain cases:
-        # ResidueNameSelector: PO4 is not a valid residue type name.
-        # resn_sele = pr_rs.ResidueNameSelector()
-        # resn_sele.set_residue_name3(','.join(wanted_ligands))
-        # shitty brutal way for now:
-        resi_sele = pr_rs.ResidueIndexSelector()
-        for r in range(1, 1+self.donor_pose.total_residue()):
-            if self.donor_pose.residue(r).name3() in wanted_ligands:
-                resi_sele.append_index(r)
+        # ResidueNameSelector seems to not like custom residues if they arent in the pose
+        try:
+            resn_sele = pr_rs.ResidueNameSelector()
+            resn_sele.set_residue_name3(','.join(wanted_ligands))
+            resn_sele.apply(self.donor_pose)
+        except RuntimeError as err:
+            raise ValueError(f'Residue not in the pose. {err}')
         # end of shitty hack.
         # filter for those within 3A of chain of interest
         # define extended neighbours
@@ -269,14 +227,15 @@ class LigandNicker:
                     self.acceptor_pose.add_constraint(con)
 
     def make_constraint_foreign_hbond(self, hbond, dex: Dict[int, int]) \
-                                        -> Union[None, pyrosetta.rosetta.core.scoring.constraints.AtomPairConstraint]:
+            -> Union[None, pyrosetta.rosetta.core.scoring.constraints.AtomPairConstraint]:
         # acc = hydrogen acceptor residue w/Acceptor atom
         # don = donor residue w/ Bounded and Hydrogen atoms.
         # ------------- sort out donor -------------
         don_res = hbond.don_res()
         don = self.donor_pose.residue(don_res)
         if don_res not in dex:
-            warnings.warn(f'The H-bond–donor residue in the donor pose has residue {don_res} with no equivalent - why was it absent in CC selector?')
+            warnings.warn(
+                f'The H-bond–donor residue in the donor pose has residue {don_res} with no equivalent - why was it absent in CC selector?')
             return
         trans_don_res = dex[don_res]  # acceptor_pose
         trans_don = self.acceptor_pose.residue(trans_don_res)
@@ -311,11 +270,12 @@ class LigandNicker:
                                   acceptor_atom,
                                   HarmonicFunc(x0_in=d, sd_in=0.2))
 
-    def relax_migrated(self, distance:int=20, cycles:int=3, atom_pair_weight:int=5):
+    def relax_migrated(self, distance: int = 20, cycles: int = 3, atom_pair_weight: int = 5):
         scorefxn = pyrosetta.get_fa_scorefxn()
         atom_pair = pyrosetta.rosetta.core.scoring.ScoreType.atom_pair_constraint
         scorefxn.set_weight(atom_pair, atom_pair_weight)
-        neigh_sele = pr_rs.NeighborhoodResidueSelector(self.added_selector, distance=distance, include_focus_in_subset=True)
+        neigh_sele = pr_rs.NeighborhoodResidueSelector(self.added_selector, distance=distance,
+                                                       include_focus_in_subset=True)
         movemap = pyrosetta.MoveMap()
         n = neigh_sele.apply(self.acceptor_pose)
         movemap.set_bb(allow_bb=n)

@@ -26,8 +26,9 @@ description = 'A variety of functions to make working with Pyrosetta easier.'
 
 setup(
     name='pyrosetta_help',
-    version='0.3.7',
+    version='0.3.8',
     packages=find_packages(),
+    install_requires=['rdkit-to-params'],
     url='https://github.com/matteoferla/pyrosetta_help',
     license='MIT',
     author='Matteo Ferla',
