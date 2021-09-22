@@ -202,7 +202,7 @@ class MutantScorer:
     def get_unweighted_scorefxn(self):
         unweighted_scorefxn = self.scorefxn.clone()
         ST = pyrosetta.rosetta.core.scoring.ScoreType
-        unweighted_scorefxn.set_weight(ST.atom_pair, 0)
+        unweighted_scorefxn.set_weight(ST.atom_pair_constraint, 0)
         unweighted_scorefxn.set_weight(ST.angle_constraint, 0)
         unweighted_scorefxn.set_weight(ST.coordinate_constraint, 0)
         unweighted_scorefxn.set_weight(ST.dihedral_constrain, 0)
