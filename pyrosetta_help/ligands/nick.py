@@ -118,11 +118,10 @@ class LigandNicker:
             r2 = self.acceptor_pose.total_residue() + 1
             dex[r] = r2
             added_indices.append(r2)
-            # Can `pyrosetta.rosetta.core.pose.append_subpose_to_pose` be used?
-            # ToDo: try if safe
-            pyrosetta.rosetta.core.pose.append_pose_to_pose(self.acceptor_pose,
-                                                            pyrosetta.Pose(self.donor_pose, r, r),
-                                                            True)
+            # append_subpose_to_pose is cool with novel residues.
+            pyrosetta.rosetta.core.pose.append_subpose_to_pose(self.acceptor_pose,
+                                                               self.donor_pose,
+                                                               r, r, True)
         # make selector of newly added residues
         self.added_selector = pr_rs.ResidueIndexSelector()
         for r in added_indices:
