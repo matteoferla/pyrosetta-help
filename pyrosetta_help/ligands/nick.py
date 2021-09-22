@@ -7,7 +7,7 @@ except ModuleNotFoundError:
 from typing import *
 from ..common_ops.downloads import download_pdb
 from ..common_ops.utils import make_blank_pose
-from .load import parameterised_pose_form_file
+from .load import parameterised_pose_from_file
 
 import warnings, requests
 
@@ -59,7 +59,7 @@ class LigandNicker:
         self.donor_chain = chain
         self.wanted_ligands = wanted_ligands
         self.extra_params = []
-        self.donor_pose = parameterised_pose_form_file(pdb_filename=pdb_filename,
+        self.donor_pose = parameterised_pose_from_file(pdb_filename=pdb_filename,
                                                        force_parameterisation=force_parameterisation,
                                                        neutralise_params=neutralise_params,
                                                        save_params=save_params,
