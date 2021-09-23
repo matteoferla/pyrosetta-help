@@ -9,12 +9,37 @@ import urllib.request as request
 from contextlib import closing
 
 def download_map(code: str):
+    """
+    This is two functions. EMD database for cryoEM files
+
+    :param code:
+    :return:
+    """
+    if isinstance(code, int) or "EMD-" in code or code.isdigit():
+        return _download_mrc_map(str(code))
+    else:
+        return _download_ccp4_map(code)
+
+def _download_mrc_map(code:str):
+    # alt:
     # https://ftp.wwpdb.org/pub/emdb/structures/EMD-20808/map/emd_20808.map.gz
     code = code.replace("EMD-", "")
     ftp_path = f'ftp://ftp.ebi.ac.uk/pub/databases/emdb/structures/EMD-{code}/map/emd_{code}.map.gz'
     file_path = f'EMD-{code}.map.gz'
     with closing(request.urlopen(ftp_path)) as r, open(file_path, 'wb') as f:
         shutil.copyfileobj(r, f)
+    return file_path
+
+def _download_ccp4_map(code:str):
+    code = code.replace("pdb:", "")
+    assert len(code) == 4, f'PDB code {code} is not 4 alphanumericals long'
+    url = f'https://www.ebi.ac.uk/pdbe/coordinates/files/{code.lower()}.ccp4'
+    file_path = f'{code}.ccp4'
+    reply = requests.get(url, stream=True)
+    assert reply.status_code == 200
+    with open(file_path, 'wb') as f:
+        reply.raw.decode_content = True
+        shutil.copyfileobj(reply.raw, f)
     return file_path
 
 def download_cif(code: str):
