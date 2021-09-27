@@ -205,7 +205,7 @@ class MutantScorer:
         unweighted_scorefxn.set_weight(ST.atom_pair_constraint, 0)
         unweighted_scorefxn.set_weight(ST.angle_constraint, 0)
         unweighted_scorefxn.set_weight(ST.coordinate_constraint, 0)
-        unweighted_scorefxn.set_weight(ST.dihedral_constrain, 0)
+        unweighted_scorefxn.set_weight(ST.dihedral_constraint, 0)
         return unweighted_scorefxn
 
 
