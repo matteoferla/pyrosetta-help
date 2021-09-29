@@ -7,8 +7,8 @@ except ModuleNotFoundError:
 from typing import *
 from ..common_ops.downloads import download_pdb
 from ..common_ops.utils import make_blank_pose
-from .load import parameterised_pose_from_file
-
+from .load import parameterised_pose_from_file, parameterised_pose_from_pdbblock
+from io import IOBase  # just for an isinstance fh
 import warnings, requests
 
 pr_rs = pyrosetta.rosetta.core.select.residue_selector
@@ -37,9 +37,12 @@ class LigandNicker:
     """
 
     def __init__(self,
-                 pdb_filename: str,
-                 chain: str,
-                 wanted_ligands: List[str],
+                 pdb_filename: Optional[str] = None,
+                 pdb_filehandle: Optional[IOBase] = None,
+                 pdb_block: Optional[str] = None,
+                 pose: Optional[pyrosetta.Pose] = None,
+                 chain: str = 'A',
+                 wanted_ligands: List[str] = (),
                  force_parameterisation: bool = False,
                  neutralise_params: bool = True,
                  save_params: bool = True,
@@ -47,7 +50,17 @@ class LigandNicker:
         """
         Initialisation loads the donor. ``migrate`` loads the acceptor.
 
+        Unfortunately, I originally wrote it to use pdb_filename only.
+        I should have written the init to accept a pose and
+        a class method the filename. And now some chucks of out there in the wild use pdb_filename.
+        So I could not switch it to something generic. Now it accepts four possible alternative choices:
+        pdb_filename, pdb_filehandle, pdb_block, pose.
+
+
         :param pdb_filename:
+        :param pdb_filehandle:
+        :param pdb_block:
+        :param pose:
         :param chain:
         :param wanted_ligands:
         :param force_parameterisation:
@@ -55,16 +68,39 @@ class LigandNicker:
         :param save_params:
         :param overriding_params: overide paramaterisation and use provide params
         """
-        self.pdb_filename = pdb_filename
+
         self.donor_chain = chain
+        assert len(wanted_ligands), 'No wanted_ligands specified'
         self.wanted_ligands = wanted_ligands
         self.extra_params = []
-        self.donor_pose = parameterised_pose_from_file(pdb_filename=pdb_filename,
-                                                       force_parameterisation=force_parameterisation,
-                                                       neutralise_params=neutralise_params,
-                                                       save_params=save_params,
-                                                       overriding_params=overriding_params)
         self.acceptor_pose = None
+        # ---- rubbish overloading  ------
+        self.pdb_filename = pdb_filename
+        if pose:
+            assert isinstance(pose, pyrosetta.Pose) and pose.total_residue()
+            self.pdb_filename = ''
+            self.donor_pose = pose
+        elif pdb_filename:
+            assert isinstance(pdb_filename, str)
+            self.donor_pose = parameterised_pose_from_file(pdb_filename=pdb_filename,
+                                                           force_parameterisation=force_parameterisation,
+                                                           neutralise_params=neutralise_params,
+                                                           save_params=save_params,
+                                                           overriding_params=overriding_params)
+        elif pdb_filehandle or pdb_block:
+            if pdb_filehandle:
+                assert isinstance(pdb_filehandle, IOBase)
+                pdb_block = pdb_filehandle.read()
+            else:
+                pass
+            self.donor_pose = parameterised_pose_from_pdbblock(pdbblock=pdb_block,
+                                                               force_parameterisation=force_parameterisation,
+                                                               neutralise_params=neutralise_params,
+                                                               save_params=save_params,
+                                                               overriding_params=overriding_params
+                                                               )
+        else:
+            raise TypeError(f'Please provide with one of pdb_filename, pdb_filehandle, pdb_block, pose')
 
     @classmethod
     def from_pdbcode(cls, pdb_code: str, chain: str, *args, **kvargs):
