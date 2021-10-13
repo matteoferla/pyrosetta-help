@@ -133,6 +133,12 @@ def add_stretch_constraint(pose: pyrosetta.Pose,
     return con
 
 def get_distance_matrix(pose):
+    """
+    Note the distance matrix is zero indexed as it would be confusing using numpy with one indexed data.
+
+    :param pose:
+    :return:
+    """
     distances = np.zeros((pose.total_residue(), pose.total_residue()))
     ca_xyzs = [pose.residue(r).xyz('CA') for r in range(1, pose.total_residue() + 1)]
     for i in range(len(ca_xyzs)):

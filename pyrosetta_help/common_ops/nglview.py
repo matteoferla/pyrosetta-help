@@ -16,7 +16,7 @@ from .utils import get_pdbstr
 
 def selector_to_ngl(self: nglview.widget.NGLWidget,
                     pose: pyrosetta.Pose,
-                    selector: pyrosetta.rosetta.core.select.residue_selector.ResidueSelector):
+                    selector: pyrosetta.rosetta.core.select.residue_selector.ResidueSelector) -> str:
     """
     Given a pose and a selector return the selection string for NGL.
 
