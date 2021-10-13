@@ -116,7 +116,7 @@ def parameterise(pdb_block: str, target_ligand: str, smiles: str, neutral: bool 
                                            name=target_ligand)
     if neutral:
         mol = neutralise(params.mol)
-        params = Params.from_mol(mol)
+        params = Params.from_mol(mol, name=target_ligand)
     if save:
         params.dump(f'{target_ligand}.params')  # safekeeping. Not used.
     return params
