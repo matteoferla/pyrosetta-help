@@ -68,7 +68,7 @@ def parameterised_pose_from_pdbblock(pdbblock: str,
                       neutralise_params=neutralise_params,
                       save_params=save_params,
                       overriding_params=overriding_params)
-    assert pose.sequence()
+    assert pose.sequence(), 'The structure failed to load'
     return pose
 
 
