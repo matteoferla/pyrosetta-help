@@ -1,6 +1,11 @@
 # pyrosetta_scripts
 Some functions that I keep using over and over as a Python module.
 
+> **Disclaimer**: I am not affiliated with PyRosetta, I am just an avid user.
+> My usage does not constitute an endorsement of PyRosetta by the BRC, NIHR, Wellcome Trust, the University of Oxford,
+> the United Kingdom of Great Britain, Northern Ireland and all its dependencies etc. etc.
+
+
 ```bash
 pip3 install pyrosetta-help
 ```
