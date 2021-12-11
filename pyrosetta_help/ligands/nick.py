@@ -4,6 +4,8 @@ try:
     from rdkit_to_params import Params, neutralise
 except ModuleNotFoundError:
     pass
+except ImportError:
+    pass
 from typing import *
 from ..common_ops.downloads import download_pdb
 from ..common_ops.utils import make_blank_pose
