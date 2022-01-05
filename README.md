@@ -1,4 +1,4 @@
-# pyrosetta_scripts
+# pyrosetta helper functions
 Some functions that I keep using over and over as a Python module.
 
 > **Disclaimer**: I am not affiliated with PyRosetta, I am just an avid user.
