@@ -14,10 +14,10 @@ pip3 install pyrosetta-help
 
 Here are some Colabs notebooks I have put together for AlphaFold2 analyses:
 
-* [Run PyRosetta in Colab](https://colab.research.google.com/github/matteoferla/pyrosetta_help/blob/main/colabs/colabs-pyrosetta.ipynb)
-* [Analysis of dimer output from ColabFold in Colab](https://colab.research.google.com/github/matteoferla/pyrosetta_help/blob/main/colabs/colabs-pyrosetta-dimer.ipynb)
-* [Migrate a ligand in Colab](https://colab.research.google.com/github/matteoferla/pyrosetta_help/blob/main/colabs/colabs-pyrosetta-migrate_ligands.ipynb)
-* [Add missing loops by cannibilising AlphaFold2](https://colab.research.google.com/github/matteoferla/pyrosetta_help/blob/main/colabs/colabs-thread_by_AF2_cannibalism.ipynb)
+* [Run PyRosetta in Colab](https://colab.research.google.com/github/matteoferla/pyrosetta_help/blob/main/colab_notebooks/colab-pyrosetta.ipynb)
+* [Analysis of dimer output from ColabFold in Colab](https://colab.research.google.com/github/matteoferla/pyrosetta_help/blob/main/colab_notebooks/colab-pyrosetta-dimer.ipynb)
+* [Migrate a ligand in Colab](https://colab.research.google.com/github/matteoferla/pyrosetta_help/blob/main/colab_notebooks/colab-pyrosetta-migrate_ligands.ipynb)
+* [Add missing loops by cannibilising AlphaFold2](https://colab.research.google.com/github/matteoferla/pyrosetta_help/blob/main/colab_notebooks/colab-thread_by_AF2_cannibalism.ipynb)
 * Stretch out an alphafold pose — ToDo
 * Add OPM dots to show membrane — ToDo
 
