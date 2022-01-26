@@ -6,7 +6,8 @@ __all__ = ['pose_from_file',
            'clarify_selector',
            'count_ligands',
            'correct_numbering',
-           'get_pdbstr']
+           'get_pdbstr',
+           'pose_range']
 
 from typing import *
 import pyrosetta
@@ -156,7 +157,6 @@ def count_ligands(pose: pyrosetta.Pose) -> List[Tuple[str, int]]:
     count = Counter([pose.residue(i).name3() for i in pr_rs.ResidueVector(lig_sele.apply(pose))])
     return count.most_common()
 
-
 def correct_numbering(pose):
     """
     A fresh PDBInfo has the PDB residue number the same as the pose one
@@ -185,4 +185,15 @@ def get_pdbstr(pose):
     buffer = pyrosetta.rosetta.std.stringbuf()
     pose.dump_pdb(pyrosetta.rosetta.std.ostream(buffer))
     return buffer.str()
+
+
+def pose_range(pose: pyrosetta.Pose, protein_only=True) -> Iterable:
+    """
+    range but for the pose...
+    For now naive of chains, non-amino acid residues etc.
+    """
+    all_iter = range(1, pose.total_residue()+1)
+    if protein_only:
+        return filter(lambda i: pose.residue(i).is_protein(), all_iter)
+    return all_iter
 

@@ -1,19 +1,23 @@
-from typing import *
+#
+
+from typing import (Optional, Tuple, Dict)
+
 import pyrosetta
+import warnings
 
 
-class NeighbourInteractions:
+class AtomicInteractions:
     """
-    Gets the per atom energies for the interactions.
+    Gets the per atom energies for the per_atom.
 
-    >>> ni = NeighbourInteractions(pose, 1)  # pose residue index 1
-    >>> print(ni.describe_best())
-    >>> ni.interactions[(' N  ', 2, ' N  ')]
+    >>> ai = AtomicInteractions(pose, 1)  # noqa  - pose residue index 1
+    >>> print(ai.describe_best())
+    >>> ai.per_atom[(' N  ', 2, ' N  ')]
 
     Unfortunately, bonding is not taken into account therefore the total is more favourable
     as these are ignored.
 
-    >>> ni.total, ni.expected_total
+    >>> ai.total, ai.expected_total
     """
 
     score_types = ['fa_atr', 'fa_rep', 'fa_sol', 'fa_elec']
@@ -33,7 +37,7 @@ class NeighbourInteractions:
         assert self.target_residue, f'{self.target_idx} not in pose'
         self.threshold = threshold
         if scorefxn is None:
-            self.scorefxn = pyrosetta.get_fa_scorefxn()
+            self.scorefxn = pyrosetta.get_fa_scorefxn() # noqa
         else:
             self.scorefxn = scorefxn
         self.weighted = weighted
@@ -58,7 +62,7 @@ class NeighbourInteractions:
                 continue
             iname = self.target_residue.atom_name(i)
             interactions[iname] = {}
-            for r in self.neighbours:
+            for r in self.neighbours: # noqa
                 if r == self.target_idx:
                     continue
                 other = self.pose.residue(r)
@@ -74,12 +78,12 @@ class NeighbourInteractions:
                                                                                          other,
                                                                                          o,
                                                                                          self.scorefxn)
-                    # interactions[iname][r][oname] = dict(zip(score_types, score))
+                    # per_atom[iname][r][oname] = dict(zip(score_types, score))
                     interactions[iname][r][oname] = {st: s * self.weights[st] / ratio
                                                      for st, s in zip(self.score_types, score)}
         # correct fa_rep for bonded
         for atomname, other_residue_index, other_atomname in self._get_connections():
-            # interactions[atomname][other_residue_index][other_atomname]['fa_rep'] = float('nan')
+            # per_atom[atomname][other_residue_index][other_atomname]['fa_rep'] = float('nan')
             del interactions[atomname][other_residue_index][other_atomname]
         # reshape
         reshaped = {(target_atomname, other_resi, atomname): interactions[target_atomname][other_resi][atomname] for
@@ -172,6 +176,15 @@ class NeighbourInteractions:
     @property
     def total(self):
         return sum([sum(d.values()) for d in self.interactions.values()])
+
+class NeighbourInteractions:
+    # old name!
+
+    def __init__(self, *args, **kwargs):
+        warnings.warn(f'`NeighbourInteractions` renamed to `AtomicInteractions`', DeprecationWarning)
+        super().__init__(*args, **kwargs)
+
+
 
 
 
