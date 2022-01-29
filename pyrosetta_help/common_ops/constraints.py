@@ -1,6 +1,7 @@
-import pyrosetta
 import re
-from typing import *
+from typing import (Optional)
+
+import pyrosetta
 
 __all__ = ['get_NGL_selection_from_AtomID',
            'print_constraint_score',
@@ -126,12 +127,13 @@ def get_AtomID_by_NGL_sele(pose: pyrosetta.Pose, selection: str) -> pyrosetta.At
         name = ''
     # residue name
     if '[' in selection:
-        resn = re.match(r'\[(\w+)\]', selection).group(1)
+        resn = re.match(r'\[(\w+)]', selection).group(1)
     else:
         resn = ''
     # residue index
     if re.search(r'\d', selection):
-        resi = int(re.match(r'(\d+)', re.sub(r'\[.*\]', selection)).group(1))
+        # sub pattern was incorrect, '' added, but I am not sure what it does.
+        resi = int(re.match(r'(\d+)', re.sub(r'\[.*]', '', selection)).group(1))
     else:
         resi = float('nan')
     # assert

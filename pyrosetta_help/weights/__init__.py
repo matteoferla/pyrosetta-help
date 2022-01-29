@@ -1,7 +1,9 @@
-import pyrosetta
 import os
+from typing import (Optional, Union, Dict, List)
+
 import pandas as pd
-from typing import *
+import pyrosetta
+
 from .terms import term_meanings
 
 

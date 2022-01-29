@@ -1,6 +1,7 @@
-from typing import *
-import pyrosetta
 import os
+from typing import (Optional)
+
+import pyrosetta
 
 __all__ = ['get_local_scorefxn',
            'prep_ED',

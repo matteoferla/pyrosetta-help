@@ -1,10 +1,11 @@
-from io import StringIO
-import requests
-from typing import *
-from Bio.Blast.NCBIWWW import qblast
-from Bio import SearchIO
-import pandas as pd
 from collections import Counter
+from io import StringIO
+from typing import (Tuple, Counter, Dict, List)
+
+import pandas as pd
+import requests
+from Bio import SearchIO
+from Bio.Blast.NCBIWWW import qblast
 
 
 class LigandHunter:

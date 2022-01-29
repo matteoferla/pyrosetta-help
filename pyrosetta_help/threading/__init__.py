@@ -1,4 +1,5 @@
-from typing import *
+from typing import (Optional, Tuple, Iterable, Dict)
+
 import pyrosetta
 
 __all__ = ['get_alignment', 'write_grishin', 'thread', 'rangify', 'steal_ligands',

@@ -1,5 +1,9 @@
-import pyrosetta, warnings, requests
+import pyrosetta
+import requests
+import warnings
+
 from ..common_ops.utils import make_blank_pose
+
 try:
     from rdkit_to_params import Params, neutralise
 except ImportError:
@@ -7,7 +11,7 @@ except ImportError:
     warn("rdkit_to_params couldn't be imported."
          " LiganNicker and parameterised_pose_from_file won't work.")
     pass
-from typing import *
+from typing import (Union, Dict, List)
 
 __all__ = ['parameterised_pose_from_file', 'parameterised_pose_from_pdbblock', 'get_smiles']
 

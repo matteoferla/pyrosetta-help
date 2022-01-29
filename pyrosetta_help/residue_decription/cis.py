@@ -1,6 +1,8 @@
-from ..common_ops import pose_range
-from typing import *
+from typing import (List)
+
 import pyrosetta
+
+from ..common_ops import pose_range
 
 
 def get_cis_residues(pose: pyrosetta.Pose) -> List[int]:

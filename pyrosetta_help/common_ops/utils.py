@@ -9,12 +9,12 @@ __all__ = ['pose_from_file',
            'get_pdbstr',
            'pose_range']
 
-from typing import *
-import pyrosetta
-import pandas as pd
-import numpy as np
-from warnings import warn
 from collections import Counter
+from typing import (Optional, Tuple, Union, Iterable, Counter, List)
+
+import numpy as np
+import pandas as pd
+import pyrosetta
 
 
 def pose_from_file(pdb_filename: str,

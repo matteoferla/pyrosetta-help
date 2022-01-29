@@ -1,9 +1,11 @@
 __all__ = ['pose_from_alphafold2', 'get_alphafold2_error', 'reshape_errors']
 
-import requests
-import pyrosetta
-from typing import *
+from typing import (Union, Dict, List)
+
 import numpy as np
+import pyrosetta
+import requests
+
 
 def pose_from_alphafold2(uniprot: str) -> pyrosetta.Pose:
     reply = requests.get(f'https://alphafold.ebi.ac.uk/files/AF-{uniprot}-F1-model_v1.pdb')

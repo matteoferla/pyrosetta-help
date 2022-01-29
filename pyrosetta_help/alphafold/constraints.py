@@ -4,9 +4,10 @@ __all__ = ['add_pae_constraints',
            'get_distance_matrix',
            'make_pae_constraint']
 
-import pyrosetta
+from typing import (Optional)
+
 import numpy as np
-from typing import *
+import pyrosetta
 
 
 def add_pae_constraints(pose: pyrosetta.Pose,
@@ -14,7 +15,7 @@ def add_pae_constraints(pose: pyrosetta.Pose,
                         cutoff: float = 12,
                         tolerance: Optional[float] = None,
                         weight: float = 1,
-                        adjecency_threshold=5):
+                        adjecency_threshold=5) -> None:
     """
 
     Add constrains to the pose based on the errors matrix.
@@ -132,7 +133,7 @@ def add_stretch_constraint(pose: pyrosetta.Pose,
     pose.add_constraint(con)
     return con
 
-def get_distance_matrix(pose):
+def get_distance_matrix(pose) -> np.ndarray:
     """
     Note the distance matrix is zero indexed as it would be confusing using numpy with one indexed data.
 

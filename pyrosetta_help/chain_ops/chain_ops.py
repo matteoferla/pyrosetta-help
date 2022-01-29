@@ -1,5 +1,6 @@
-from typing import *
-import re, json
+import json
+from typing import (List)
+
 
 class ChainOps:
     """

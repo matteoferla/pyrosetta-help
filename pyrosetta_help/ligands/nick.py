@@ -6,12 +6,11 @@ except ModuleNotFoundError:
     pass
 except ImportError:
     pass
-from typing import *
+from typing import (Optional, Union, Dict, List)
 from ..common_ops.downloads import download_pdb
-from ..common_ops.utils import make_blank_pose
 from .load import parameterised_pose_from_file, parameterised_pose_from_pdbblock
 from io import IOBase  # just for an isinstance fh
-import warnings, requests
+import warnings
 
 pr_rs = pyrosetta.rosetta.core.select.residue_selector
 

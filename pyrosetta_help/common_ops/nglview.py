@@ -1,15 +1,18 @@
 """
 Adds to the NGLView Widget the method ``.add_selector``
 
+>>> import nglview as nv
 >>> view = nv.view_rosetta(pose)
 >>> view.add_selector(pose, selector)
 >>> view
 """
 
-import pyrosetta
-import nglview
 from io import StringIO
-from typing import *
+from typing import (Optional)
+
+import nglview
+import pyrosetta
+
 from .constraints import get_NGL_selection_from_AtomID
 from .utils import get_pdbstr
 
@@ -28,7 +31,7 @@ def selector_to_ngl(self: nglview.widget.NGLWidget,
     pdb_info = pose.pdb_info()
     # should probably `deal with pdb_info.segmentID(1).strip()`
     ResidueVector = pyrosetta.rosetta.core.select.residue_selector.ResidueVector
-    selections = [f'{pdb_info.number(r)}:{pdb_info.chain(r)}' for r in ResidueVector(selector.apply(pose))]
+    selections = [f'{pdb_info.number(r)}:{pdb_info.chain(r)}' for r in ResidueVector(selector.apply(pose))]  # noqa
     selection = ' or '.join(selections)
     return selection
 
@@ -51,7 +54,7 @@ def add_selector(self: nglview.widget.NGLWidget,
     :param other:
     :return:
     """
-    selection = self.selector_to_ngl(pose, selector)
+    selection = self.selector_to_ngl(pose, selector)  # noqa --> Monkeypatched
     self.add_representation(representation_name,
                             colorValue=color,
                             selection=selection,
@@ -67,8 +70,7 @@ def add_rosetta(self: nglview.widget.NGLWidget,
 
     :param self:
     :param pose:
-    :param bfactor:
-    :return:
+    :return: component
     """
     fh = StringIO(get_pdbstr(pose))
     c = self.add_component(fh, ext='pdb')
@@ -94,9 +96,9 @@ def make_pose_comparison(self: nglview.widget.NGLWidget,
     :param second_color:
     :return:
     """
-    c0 = self.add_rosetta(first_pose)
+    c0 = self.add_rosetta(first_pose)  # noqa --> Monkeypatched
     c0.update_cartoon(color=first_color, smoothSheet=True)
-    c1 = self.add_rosetta(second_pose)
+    c1 = self.add_rosetta(second_pose)  # noqa --> Monkeypatched
     c1.update_cartoon(color=second_color, smoothSheet=True)
 
 

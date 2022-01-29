@@ -1,6 +1,9 @@
-from typing import *
-from ..weights import term_meanings
+from typing import (Tuple)
+
 import pandas as pd
+
+from ..weights import term_meanings
+
 
 def get_lowest_contributor(row: pd.Series) -> Tuple[str, float]:
     """

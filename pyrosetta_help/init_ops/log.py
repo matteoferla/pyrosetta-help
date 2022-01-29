@@ -1,6 +1,9 @@
-import logging, sys, io, pyrosetta
+import io
+import logging
+import pyrosetta
 import re
-from typing import *
+from typing import (Any, Optional, Union, Dict, List)
+
 
 def configure_logger() -> logging.Logger:
     """

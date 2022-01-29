@@ -1,8 +1,11 @@
 __all__ = ['AF2NotebookAnalyser']
 
+import json
+import os
+import re
+from typing import (Optional, Dict)
+
 import numpy as np
-import os, re, json
-from typing import *
 import pandas as pd
 import pyrosetta
 
