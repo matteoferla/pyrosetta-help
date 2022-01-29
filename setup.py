@@ -29,7 +29,7 @@ setup(
     version='0.4.0',
     python_requires='>=3.7',
     packages=find_packages(),
-    install_requires=['rdkit-to-params'],
+    install_requires=['rdkit-to-params', 'xerox'],
     url='https://github.com/matteoferla/pyrosetta_help',
     license='MIT',
     author='Matteo Ferla',
