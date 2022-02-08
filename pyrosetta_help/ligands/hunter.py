@@ -1,6 +1,6 @@
 from collections import Counter
 from io import StringIO
-from typing import (Tuple, Counter, Dict, List)
+from typing import (Tuple, Dict, List)
 
 import pandas as pd
 import requests
@@ -18,9 +18,20 @@ class LigandHunter:
     * ``.to_dataframe()`` converts into a pandas dataframe for further analysis.
     * ``.candidate_ligands`` list of ligand residue 3-letter codes
     """
-    cofactor_reference = requests.get('https://www.ebi.ac.uk/pdbe/api/pdb/compound/cofactors').json()
-    _grouped_cofactor_codes = {name: value[0]['cofactors'] for name, value in cofactor_reference.items()}
-    cofactor_codes = [code for codes in _grouped_cofactor_codes.values() for code in codes]
+    _cofactor_reference = {}
+
+    @property
+    def cofactor_reference(self):
+        if not self._cofactor_reference: #cached
+            self._cofactor_reference = requests.get('https://www.ebi.ac.uk/pdbe/api/pdb/compound/cofactors').json()
+            return self._cofactor_reference
+
+    missing_codes = ['ATP', 'GTP', 'CA', 'MG', 'W']
+
+    @property
+    def cofactor_codes(self):
+        _grouped_cofactor_codes = {name: value[0]['cofactors'] for name, value in self.cofactor_reference.items()}
+        return [code for codes in _grouped_cofactor_codes.values() for code in codes] + self.missing_codes
 
     def __init__(self, sequence: str):
         """
@@ -56,12 +67,8 @@ class LigandHunter:
         return self._ligand_data
 
     def get_most_common_ligands(self) -> List[Tuple[str, int]]:
-        """
-        Uses collections.counter
-
-        :return:
-        """
-        c = Counter([code for datum in self.data.values() for code in datum['ligand_codes']])
+        # Uses collections.Counter not typing.Counter:
+        c = Counter([code for datum in self.data.values() for code in datum['ligand_codes']])  # noqa
         return c.most_common()
 
     def get_pdb_entry_by_ligand(self, ligand_code: str) -> dict:
@@ -102,6 +109,3 @@ class LigandHunter:
             entry['ligand_codes'] = [inner['chem_comp_id'] for inner in datum]
             entry['cofactor_codes'] = [code for code in entry['ligand_codes'] if code in self.cofactor_codes]
             entry['has_cofactor'] = bool(entry['cofactor_codes'])
-
-
-LigandHunter.cofactor_codes += ['ATP', 'GTP', 'CA', 'MG', 'W']
