@@ -26,7 +26,7 @@ description = 'A variety of functions to make working with Pyrosetta easier.'
 
 setup(
     name='pyrosetta_help',
-    version='0.4.2',
+    version='0.4.3',
     python_requires='>=3.7',
     packages=find_packages(),
     install_requires=['rdkit-to-params', 'xerox'],
