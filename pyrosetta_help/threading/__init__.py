@@ -8,7 +8,7 @@ __all__ = ['get_alignment', 'write_grishin', 'thread', 'rangify', 'steal_ligands
 
 def get_alignment(target: str, template: str) -> Dict[str, str]:
     """
-    Returns alignments.
+    Returns alignments using ``pairwise2.align.globalxs``
     """
     from Bio import pairwise2
     alignments = pairwise2.align.globalxs(target,
