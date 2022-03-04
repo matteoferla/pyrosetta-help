@@ -157,7 +157,7 @@ class WeightWatcher:
         returns ``['hydrate_score12']``
         """
         mentionants = []
-        for scorefxn_name in self.get_possible_scorefxn_names:
+        for scorefxn_name in self.possible_scorefxn_names:
             block = self.get_scorefxn_block(scorefxn_name)
             if word.lower() in block.lower():
                 mentionants.append(scorefxn_name)

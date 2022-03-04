@@ -10,6 +10,7 @@ except ImportError:
     from warnings import warn
     warn("rdkit_to_params couldn't be imported."
          " LiganNicker and parameterised_pose_from_file won't work.")
+    Params = None
     pass
 from typing import (Union, Dict, List)
 

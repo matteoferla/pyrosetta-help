@@ -208,7 +208,15 @@ class LigandNicker:
         return neigh_resis  # these are the pose indices
 
     def _make_map(self, al, pose_offset=0):
-        # pose index (fortran-style) to MSA index (C++-style)
+        """
+        pose index (fortran-style) to MSA index (C++-style)
+
+        Returns a dictionary of key = offset + ungapped index (zero-indexed) to msa index  (zero-indexed)
+
+        :param al:
+        :param pose_offset:
+        :return:
+        """
         gap_map = [i for i, r in enumerate(al) if r != '-']
         return {pose_offset + ungap_i: gap_i for ungap_i, gap_i in enumerate(gap_map)}
 
