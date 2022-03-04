@@ -14,6 +14,9 @@ if not util.find_spec('pyrosetta'):
 
 # ---------- Setup  ------------------------------------------------------------------------------------------
 
+with open('requirements.txt', 'r') as fh:
+    requirements = fh.read().strip().split()
+
 
 from setuptools import setup, find_packages
 
@@ -26,10 +29,10 @@ description = 'A variety of functions to make working with Pyrosetta easier.'
 
 setup(
     name='pyrosetta_help',
-    version='0.4.3',
+    version='0.4.4',
     python_requires='>=3.7',
     packages=find_packages(),
-    install_requires=['rdkit-to-params', 'xerox'],
+    install_requires=requirements,
     url='https://github.com/matteoferla/pyrosetta_help',
     license='MIT',
     author='Matteo Ferla',
