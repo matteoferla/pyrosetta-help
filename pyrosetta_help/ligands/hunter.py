@@ -21,7 +21,7 @@ class LigandHunter:
     _cofactor_reference = {}
 
     @property
-    def cofactor_reference(self):
+    def cofactor_reference(self) -> Dict[List[dict]]:
         if not self._cofactor_reference: #cached
             self._cofactor_reference = requests.get('https://www.ebi.ac.uk/pdbe/api/pdb/compound/cofactors').json()
         return self._cofactor_reference
