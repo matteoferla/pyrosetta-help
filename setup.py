@@ -14,14 +14,14 @@ if not util.find_spec('pyrosetta'):
 
 # ---------- Setup  ------------------------------------------------------------------------------------------
 
-with open('requirements.txt', 'r') as fh:
+import os
+this_directory = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(this_directory,'requirements.txt'), 'r') as fh:
     requirements = fh.read().strip().split()
 
 
 from setuptools import setup, find_packages
 
-import os
-this_directory = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(this_directory, 'README.md'), encoding='utf-8') as f:
     __doc__ = f.read()
 
@@ -29,7 +29,7 @@ description = 'A variety of functions to make working with Pyrosetta easier.'
 
 setup(
     name='pyrosetta_help',
-    version='0.4.5',
+    version='0.4.6',
     python_requires='>=3.7',
     packages=find_packages(),
     install_requires=requirements,
