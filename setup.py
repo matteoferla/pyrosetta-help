@@ -16,20 +16,23 @@ if not util.find_spec('pyrosetta'):
 
 import os
 this_directory = os.path.abspath(os.path.dirname(__file__))
-with open(os.path.join(this_directory,'requirements.txt'), 'r') as fh:
-    requirements = fh.read().strip().split()
+try:
+    with open(os.path.join(this_directory,'requirements.txt'), 'r') as fh:
+        requirements = fh.read().strip().split()
+    with open(os.path.join(this_directory, 'README.md'), encoding='utf-8') as f:
+        __doc__ = f.read()
+except Exception:  # weird file
+    requirements = ['rdkit-to-params', 'xerox']
+    __doc__ = ''
 
 
 from setuptools import setup, find_packages
-
-with open(os.path.join(this_directory, 'README.md'), encoding='utf-8') as f:
-    __doc__ = f.read()
 
 description = 'A variety of functions to make working with Pyrosetta easier.'
 
 setup(
     name='pyrosetta_help',
-    version='0.4.6',
+    version='0.4.8',
     python_requires='>=3.7',
     packages=find_packages(),
     install_requires=requirements,
