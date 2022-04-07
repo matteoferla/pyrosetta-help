@@ -59,7 +59,24 @@ from importlib import reload
 reload(ph)
 ```
 
-NB. No plain text username+password combinations are stored in this repository.
+No plain text username+password combinations are stored in this repository.
+But the inputted values are SHA256-hashed and compared to a hash of the correct Rosetta and PyRosetta credentials.
+If the former are used a clear error message will be shown as Rosetta has a different set of credentials.
+
+Hit: The pyrosetta username and password are in the format like `boltzmann` + `constant`, not `SomeThingUser`+`qwerty`.
+
+(This will however not stop people from asking, ae)
+
+If the credentials are incorrect an error is raised, unless `hash_comparison_required=False`.
+
+```python
+install_pyrosetta(username= username,
+                  password= password,
+                  path=None,
+                  hash_comparison_required=True)
+```
+
+Another option 
 
 ## Starting up
 
