@@ -3,8 +3,7 @@ Some functions that I keep using over and over as a Python module.
 
 > **Disclaimer**: I am not affiliated with PyRosetta, I am just an avid user.
 > My usage does not constitute an endorsement of PyRosetta by the BRC, NIHR, Wellcome Trust, the University of Oxford,
-> the United Kingdom of Great Britain, Northern Ireland and all its dependencies etc. etc.
-
+> the United Kingdom of Great Britain + Northern Ireland + all its dependencies etc. etc.
 
 ```bash
 pip3 install pyrosetta-help
@@ -20,6 +19,47 @@ Here are some Colabs notebooks I have put together for AlphaFold2 analyses:
 * [Add missing loops by cannibilising AlphaFold2](https://colab.research.google.com/github/matteoferla/pyrosetta_help/blob/main/colab_notebooks/colab-thread_by_AF2_cannibalism.ipynb)
 * Stretch out an alphafold pose — ToDo
 * Add OPM dots to show membrane — ToDo
+
+## Cleaner Pip install for pyrosetta
+
+Whereas one can create a conda environment easy fully loaded with fun, e.g.
+
+```bash
+CONDA_OVERRIDE_GLIBC=2.35 conda create -n 👾👾👾 python=3.8 -y \
+        -c conda-forge \
+        -c https://👾👾👾:👾👾👾@west.rosettacommons.org/pyrosetta/conda/release/ \
+        -c schrodinger \
+        -c plotly \
+        pyrosetta pymol-bundle rdkit plotly dask
+```
+Were the alien emoji are redacting the username and password.
+
+Installing with `pip` is more problematic. As of Febuary 2022 either of the following fail because the authentication on
+the 302 redirect causes issue:
+
+```bash
+pip install https://👾👾👾:👾👾👾@https://graylab.jhu.edu/download/PyRosetta4/archive/release/
+pip install https://👾👾👾:👾👾👾@https://graylab.jhu.edu/download/PyRosetta4/archive/release/PyRosetta4.Release.python39.mac.wheel/latest.html
+```
+
+As a result `pyrosetta_help` has two functions, `install_pyrosetta` and `check_pyrosetta`, 
+which aim to help this. The `setup.py` also registers a command (`install_pyrosetta`) to make it possible too.
+
+```bash
+pip install pyrosetta-help
+install_pyrosetta -u 👾👾👾 -p 👾👾👾
+```
+In Python, the module `pyrosetta_help` needs to be reloaded afterwards.
+
+```python
+import pyrosetta_help as ph  # this will give a warning because there's no pyrosetta
+print(ph.check_pyrosetta())  # False, there is no pyrosetta
+ph.install_pyrosetta('👾👾👾', '👾👾👾')
+from importlib import reload
+reload(ph)
+```
+
+NB. No plain text username+password combinations are stored in this repository.
 
 ## Starting up
 

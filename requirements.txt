@@ -1,2 +1,5 @@
 rdkit-to-params
 xerox
+requests
+IPython
+pandas
