@@ -1,5 +1,5 @@
-from .installer import install_pyrosetta, check_pyrosetta
-
+from .installer import install_pyrosetta, check_pyrosetta, download_pyrosetta
+from .colab_ops import *  # has __all__
 if installer.check_pyrosetta():
     from .weights import WeightWatcher
     from .blueprint_maker import Blueprinter
