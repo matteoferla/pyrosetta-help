@@ -5,22 +5,27 @@ import warnings
 from ..common_ops.utils import make_blank_pose
 
 try:
-    from rdkit_to_params import Params, neutralise
+    from rdkit_to_params import Params, neutralize
 except ImportError:
     from warnings import warn
+
     warn("rdkit_to_params couldn't be imported."
-         " LiganNicker and parameterised_pose_from_file won't work.")
-    Params = None
-    pass
+         " LiganNicker and parameterized_pose_from_file won't work.")
+
+    def raiser(*args, **kwargs):  # noqa
+        raise ModuleNotFoundError('rdkit_to_params could not be imported.')
+
+    Params = raiser
+    neutralize = raiser
 from typing import (Union, Dict, List)
 
-__all__ = ['parameterised_pose_from_file', 'parameterised_pose_from_pdbblock', 'get_smiles']
+__all__ = ['parameterized_pose_from_file', 'parameterized_pose_from_pdbblock', 'get_smiles']
 
 
-def parameterised_pose_from_file(pdb_filename,
+def parameterized_pose_from_file(pdb_filename,
                                  wanted_ligands: Union[List[str], Dict[str, Union[str, None]]] = (),
                                  force_parameterisation: bool = False,
-                                 neutralise_params: bool = True,
+                                 neutralize_params: bool = True,
                                  save_params: bool = True,
                                  overriding_params=()) -> pyrosetta.Pose:
     """
@@ -31,25 +36,25 @@ def parameterised_pose_from_file(pdb_filename,
     :param pdb_filename:
     :param wanted_ligands: a list of three letter codes or a dictionary of three letter codes to None or smiles
     :param force_parameterisation:
-    :param neutralise_params: protonated for pH 7
+    :param neutralize_params: protonated for pH 7
     :param save_params:
     :param overriding_params: list of params filenames
     :return:
     """
     with open(pdb_filename, 'r') as fh:
         pdbblock = fh.read()
-    return parameterised_pose_from_pdbblock(pdbblock,
+    return parameterized_pose_from_pdbblock(pdbblock,
                                             wanted_ligands=wanted_ligands,
                                             force_parameterisation=force_parameterisation,
-                                            neutralise_params=neutralise_params,
+                                            neutralize_params=neutralize_params,
                                             save_params=save_params,
                                             overriding_params=overriding_params)
 
 
-def parameterised_pose_from_pdbblock(pdbblock: str,
+def parameterized_pose_from_pdbblock(pdbblock: str,
                                      wanted_ligands: Union[List[str], Dict[str, Union[str, None]]] = (),
                                      force_parameterisation: bool = False,
-                                     neutralise_params: bool = True,
+                                     neutralize_params: bool = True,
                                      save_params: bool = True,
                                      overriding_params=()) -> pyrosetta.Pose:
     """
@@ -57,10 +62,10 @@ def parameterised_pose_from_pdbblock(pdbblock: str,
     Assumes all mystery components are PDB residues.
     Works best with ignore_unrecognized_res False
 
-    :param pdb_filename:
+    :param pdbblock:
     :param wanted_ligands: a list of three letter codes or a dictionary of three letter codes to None or smiles
     :param force_parameterisation:
-    :param neutralise_params: protonated for pH 7
+    :param neutralize_params: protonated for pH 7
     :param save_params:
     :param overriding_params: list of params filenames
     :return:
@@ -76,7 +81,7 @@ def parameterised_pose_from_pdbblock(pdbblock: str,
     pose = _prep_pose(pdbblock=pdbblock,
                       ligand_dex=needed_ligands,
                       force_parameterisation=force_parameterisation,
-                      neutralise_params=neutralise_params,
+                      neutralize_params=neutralize_params,
                       save_params=save_params,
                       overriding_params=overriding_params)
     assert pose.sequence(), 'The structure failed to load'
@@ -86,7 +91,7 @@ def parameterised_pose_from_pdbblock(pdbblock: str,
 def _prep_pose(pdbblock: str,
                ligand_dex: Dict,
                force_parameterisation: bool = False,
-               neutralise_params: bool = True,
+               neutralize_params: bool = True,
                save_params: bool = True,
                overriding_params: List = ()):
     """
@@ -100,10 +105,10 @@ def _prep_pose(pdbblock: str,
                 smiles = ligand_dex[target_ligand]
                 if not smiles:
                     smiles = get_smiles(target_ligand)
-                params = parameterize(pdb_block=pdbblock,
+                params:Params = parameterize(pdb_block=pdbblock,
                                       target_ligand=target_ligand,
                                       smiles=smiles,
-                                      neutral=neutralise_params,
+                                      neutral=neutralize_params,
                                       save=save_params)
                 rts = params.add_residuetype(pose)
                 pose.conformation().reset_residue_type_set_for_conf(rts)
@@ -116,18 +121,19 @@ def _prep_pose(pdbblock: str,
         missing = err.args[0].strip()[-3:]
         warnings.warn(f'adding {missing}')
         ligand_dex[missing] = None
-        return _prep_pose(pdbblock, ligand_dex, force_parameterisation, neutralise_params, save_params,
+        return _prep_pose(pdbblock, ligand_dex, force_parameterisation, neutralize_params, save_params,
                           overriding_params)
 
 
 def parameterize(pdb_block: str, target_ligand: str, smiles: str, neutral: bool = True, save: bool = True) -> Params:
-    params = Params.from_smiles_w_pdbblock(pdb_block=pdb_block,
+    # this fun was formerly parameterise
+    params:Params = Params.from_smiles_w_pdbblock(pdb_block=pdb_block,
                                            smiles=smiles,
                                            proximityBonding=False,
                                            name=target_ligand)
     if neutral:
-        mol = neutralise(params.mol)
-        params = Params.from_mol(mol, name=target_ligand)
+        mol = neutralize(params.mol)  # this was formerly neutralise
+        params: Params = Params.from_mol(mol, name=target_ligand)
     if save:
         params.dump(f'{target_ligand}.params')  # safekeeping. Not used.
     return params

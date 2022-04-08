@@ -1,14 +1,14 @@
 import pyrosetta
 
 try:
-    from rdkit_to_params import Params, neutralise
+    from rdkit_to_params import Params, neutralize
 except ModuleNotFoundError:
     pass
 except ImportError:
     pass
 from typing import (Optional, Union, Dict, List)
 from ..common_ops.downloads import download_pdb
-from .load import parameterised_pose_from_file, parameterised_pose_from_pdbblock
+from .load import parameterized_pose_from_file, parameterized_pose_from_pdbblock
 from io import IOBase  # just for an isinstance fh
 import warnings
 
@@ -45,7 +45,7 @@ class LigandNicker:
                  chain: str = 'A',
                  wanted_ligands: List[str] = (),
                  force_parameterisation: bool = False,
-                 neutralise_params: bool = True,
+                 neutralize_params: bool = True,
                  save_params: bool = True,
                  overriding_params=()):
         """
@@ -65,7 +65,7 @@ class LigandNicker:
         :param chain:
         :param wanted_ligands:
         :param force_parameterisation:
-        :param neutralise_params: pH 7 protonation
+        :param neutralize_params: pH 7 protonation
         :param save_params:
         :param overriding_params: overide paramaterisation and use provide params
         """
@@ -83,9 +83,9 @@ class LigandNicker:
             self.donor_pose = pose
         elif pdb_filename:
             assert isinstance(pdb_filename, str)
-            self.donor_pose = parameterised_pose_from_file(pdb_filename=pdb_filename,
+            self.donor_pose = parameterized_pose_from_file(pdb_filename=pdb_filename,
                                                            force_parameterisation=force_parameterisation,
-                                                           neutralise_params=neutralise_params,
+                                                           neutralize_params=neutralize_params,
                                                            save_params=save_params,
                                                            overriding_params=overriding_params)
         elif pdb_filehandle or pdb_block:
@@ -94,9 +94,9 @@ class LigandNicker:
                 pdb_block = pdb_filehandle.read()
             else:
                 pass
-            self.donor_pose = parameterised_pose_from_pdbblock(pdbblock=pdb_block,
+            self.donor_pose = parameterized_pose_from_pdbblock(pdbblock=pdb_block,
                                                                force_parameterisation=force_parameterisation,
-                                                               neutralise_params=neutralise_params,
+                                                               neutralize_params=neutralize_params,
                                                                save_params=save_params,
                                                                overriding_params=overriding_params
                                                                )
