@@ -100,7 +100,7 @@ def _prep_pose(pdbblock: str,
                 smiles = ligand_dex[target_ligand]
                 if not smiles:
                     smiles = get_smiles(target_ligand)
-                params = parameterise(pdb_block=pdbblock,
+                params = parameterize(pdb_block=pdbblock,
                                       target_ligand=target_ligand,
                                       smiles=smiles,
                                       neutral=neutralise_params,
@@ -120,7 +120,7 @@ def _prep_pose(pdbblock: str,
                           overriding_params)
 
 
-def parameterise(pdb_block: str, target_ligand: str, smiles: str, neutral: bool = True, save: bool = True) -> Params:
+def parameterize(pdb_block: str, target_ligand: str, smiles: str, neutral: bool = True, save: bool = True) -> Params:
     params = Params.from_smiles_w_pdbblock(pdb_block=pdb_block,
                                            smiles=smiles,
                                            proximityBonding=False,

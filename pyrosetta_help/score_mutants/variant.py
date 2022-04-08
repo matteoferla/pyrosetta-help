@@ -58,7 +58,7 @@ class MutantScorer:
                        interfaces,
                        ref_interface_dG: Dict[str, float],
                        final_func: Optional[Callable] = None,
-                       preminimise: bool = False,
+                       preminimize: bool = False,
                        movement: bool = False) -> Tuple[Dict[str, float], pyrosetta.Pose, pyrosetta.Pose]:
         """
         Scores the mutation ``mutation_name`` (str or Mutation instance)
@@ -71,10 +71,10 @@ class MutantScorer:
         :param interfaces:
         :param ref_interface_dG: premade if no preminimise.
         :param final_func:
-        :param preminimise:
+        :param preminimize:
         :return:
         """
-        if preminimise:
+        if preminimize:
             premutant = self.pose.clone()
         else:
             premutant = self.pose
@@ -85,7 +85,7 @@ class MutantScorer:
                 print(mutation)
             if not self.does_contain(mutation):
                 raise ValueError('Absent')
-            if preminimise:
+            if preminimize:
                 self.relax_around_mover(premutant,
                                         mutation=mutation,
                                         distance=distance,
@@ -110,7 +110,7 @@ class MutantScorer:
                                chains=chains,
                                distance=distance,
                                interfaces=interfaces,
-                               ref_interface_dG=ref_interface_dG if not preminimise else dict(),
+                               ref_interface_dG=ref_interface_dG if not preminimize else dict(),
                                final_func=final_func,
                                movement=movement)
         # if ref_interface_dG (above) is empty score_only calcutates it, so it makes no diff why its empty.
@@ -130,10 +130,10 @@ class MutantScorer:
         unweighted_scorefxn = self.get_unweighted_scorefxn()
         wt_score = unweighted_scorefxn(reference)
         mut_score = unweighted_scorefxn(variant)
-        neigh_vector = self.get_neighbour_vector(pose=reference,
-                                                 resi=mutation.pose_resi,
-                                                 chain=None,  # if chain is present, it assumes resi is pdb number.
-                                                 distance=distance)
+        neigh_vector = self.get_neighbor_vector(pose=reference,
+                                                resi=mutation.pose_resi,
+                                                chain=None,  # if chain is present, it assumes resi is pdb number.
+                                                distance=distance)
         neigh_wt_score = unweighted_scorefxn.get_sub_score(reference, neigh_vector)
         neigh_mut_score = unweighted_scorefxn.get_sub_score(variant, neigh_vector)
         data = {'model': self.modelname,
@@ -213,7 +213,7 @@ class MutantScorer:
                         mutations,
                         chains='A',
                         interfaces=(),  # list of two: name, scheme
-                        preminimise=False,
+                        preminimize=False,
                         distance=10,
                         cycles=5,
                         final_func: Optional[Callable] = None) -> List[Dict[str, Union[float, str]]]:
@@ -222,7 +222,7 @@ class MutantScorer:
         ## wt
         ref_interface_dG = {}
         scores = {}  # not written to csv file.
-        if not preminimise:
+        if not preminimize:
             # touch the energies:
             self.get_unweighted_scorefxn()(self.pose)
             for interface_name, interface_scheme in interfaces:
@@ -239,7 +239,7 @@ class MutantScorer:
                                                                interfaces=interfaces,
                                                                ref_interface_dG=ref_interface_dG,
                                                                final_func=final_func,
-                                                               preminimise=preminimise)
+                                                               preminimize=preminimize)
             except Exception as error:
                 msg = f"{error.__class__.__name__}: {error}"
                 print(msg)
@@ -340,8 +340,8 @@ class MutantScorer:
             pose = self.pose
         movemap = pyrosetta.MoveMap()
         ####
-        n = self.get_neighbour_vector(pose=pose, resi=resi, chain=chain, distance=distance,
-                                      own_chain_only=own_chain_only)
+        n = self.get_neighbor_vector(pose=pose, resi=resi, chain=chain, distance=distance,
+                                     own_chain_only=own_chain_only)
         # print(pyrosetta.rosetta.core.select.residue_selector.ResidueVector(n))
         movemap.set_bb(False)
         movemap.set_bb(allow_bb=n)
@@ -361,9 +361,9 @@ class MutantScorer:
             relax.cartesian(False)
         relax.apply(pose)
 
-    def get_neighbour_vector(self, pose: pyrosetta.Pose, resi: int, chain: str, distance: int,
-                             include_focus_in_subset: bool = True,
-                             own_chain_only: bool = False) -> pyrosetta.rosetta.utility.vector1_bool:
+    def get_neighbor_vector(self, pose: pyrosetta.Pose, resi: int, chain: str, distance: int,
+                            include_focus_in_subset: bool = True,
+                            own_chain_only: bool = False) -> pyrosetta.rosetta.utility.vector1_bool:
         resi_sele = pyrosetta.rosetta.core.select.residue_selector.ResidueIndexSelector()
         if chain is None:  # pose numbering.
             resi_sele.set_index(resi)
@@ -425,13 +425,13 @@ class MutantScorer:
         return x
 
     def CA_RMSD(self, poseA: pyrosetta.Pose, poseB: pyrosetta.Pose, resi: int, chain: Union[str, None], distance: int) -> float:
-        n = self.get_neighbour_vector(pose=poseA, resi=resi, chain=chain, distance=distance)
+        n = self.get_neighbor_vector(pose=poseA, resi=resi, chain=chain, distance=distance)
         residues = self.vector2list(n)
         return pyrosetta.rosetta.core.scoring.CA_rmsd(poseA, poseB, residues)
 
     def FA_RMSD(self, poseA: pyrosetta.Pose, poseB: pyrosetta.Pose, resi: int, chain: Union[str, None], distance: int) -> float:
-        n = self.get_neighbour_vector(pose=poseA, resi=resi, chain=chain, distance=distance,
-                                      include_focus_in_subset=False)
+        n = self.get_neighbor_vector(pose=poseA, resi=resi, chain=chain, distance=distance,
+                                     include_focus_in_subset=False)
         residues = self.vector2list(n)
         # pyrosetta.rosetta.core.scoring.automorphic_rmsd(residueA, residueB, False)
         return pyrosetta.rosetta.core.scoring.all_atom_rmsd(poseA, poseB, residues)
@@ -480,8 +480,8 @@ class MutantScorer:
         """
         # this code is experimental
 
-        n = self.get_neighbour_vector(pose=original, resi=resi, chain=chain, distance=distance,
-                                      own_chain_only=False)
+        n = self.get_neighbor_vector(pose=original, resi=resi, chain=chain, distance=distance,
+                                     own_chain_only=False)
         # resi
         if chain is None:  # pose numbering.
             target_res = resi

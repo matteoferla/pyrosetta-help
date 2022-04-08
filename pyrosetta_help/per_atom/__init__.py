@@ -50,7 +50,7 @@ class AtomicInteractions:
                             zip(self.score_types, ['fa_atr', 'fa_rep', 'fa_sol', 'fa_elec'])}
         self.halved = halved
         # --- derived
-        self.neighbours = self._get_neighbours()  # ResidueVector
+        self.neighbors = self._get_neighbors()  # ResidueVector
         self.interactions = self._get_interactions()  # Dict[Tuple(str, int, str), Dict[str, float]]
 
     def _get_interactions(self) -> Dict[Tuple[str, int, str], Dict[str, float]]:
@@ -62,7 +62,7 @@ class AtomicInteractions:
                 continue
             iname = self.target_residue.atom_name(i)
             interactions[iname] = {}
-            for r in self.neighbours: # noqa
+            for r in self.neighbors: # noqa
                 if r == self.target_idx:
                     continue
                 other = self.pose.residue(r)
@@ -91,7 +91,7 @@ class AtomicInteractions:
                     interactions[target_atomname][other_resi]}
         return reshaped
 
-    def _get_neighbours(self) -> pyrosetta.rosetta.core.select.residue_selector.ResidueVector:
+    def _get_neighbors(self) -> pyrosetta.rosetta.core.select.residue_selector.ResidueVector:
         cc_sele = self.get_cc_selector()
         neighs = pyrosetta.rosetta.core.select.residue_selector.ResidueVector(cc_sele.apply(self.pose))
         return neighs
@@ -177,7 +177,7 @@ class AtomicInteractions:
     def total(self):
         return sum([sum(d.values()) for d in self.interactions.values()])
 
-class NeighbourInteractions:
+class NeighbourInteractions(AtomicInteractions):
     # old name!
 
     def __init__(self, *args, **kwargs):

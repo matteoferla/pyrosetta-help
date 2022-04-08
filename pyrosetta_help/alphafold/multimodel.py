@@ -337,11 +337,11 @@ class AF2NotebookAnalyser:
         if len(valids) == 0:
             return valids
         neigh_sele = pyrosetta.rosetta.core.select.residue_selector.NeighborhoodResidueSelector(resi_sele, 7, True)
-        neighbour_vector = neigh_sele.apply(pose)
+        neighbor_vector = neigh_sele.apply(pose)
         relax = pyrosetta.rosetta.protocols.relax.FastRelax(scorefxn, cycles)
         movemap = pyrosetta.MoveMap()
-        movemap.set_bb(neighbour_vector)
-        movemap.set_chi(neighbour_vector)
+        movemap.set_bb(neighbor_vector)
+        movemap.set_chi(neighbor_vector)
         relax.set_movemap(movemap)
         relax.apply(pose)
         return valids

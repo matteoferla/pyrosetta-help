@@ -153,16 +153,18 @@ Given a list of mutants and pose, score them. scorefunction terms, interface, mo
 
 ```python
 from pyrosetta_help import MutantScorer, Mutation, extend_scores
+
 model = MutantScorer(pose, modelname='test')
 model.scorefxn = pyrosetta.create_score_function('ref2015')
 model.strict_about_starting_residue = True
 data = model.score_mutations(['p.Met1Gly', 'p.Ser29Glu'],
-                            chain='V',
-                            interfaces=(('isolated', 'V_ABCDEFGHIJKLMNOPQRSTWXYZ'),), #
-                            preminimise=True,
-                            distance=12,
-                            cycles=5)
+                             chain='V',
+                             interfaces=(('isolated', 'V_ABCDEFGHIJKLMNOPQRSTWXYZ'),),  #
+                             preminimize=True,
+                             distance=12,
+                             cycles=5)
 import pandas as pd
+
 scores = pd.DataFrame(data)
 extend_scores(scores)
 ```
