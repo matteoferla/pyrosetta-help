@@ -3,3 +3,4 @@ xerox
 requests
 IPython
 pandas
+biopython

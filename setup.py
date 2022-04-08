@@ -13,7 +13,7 @@ try:
     with open(os.path.join(this_directory, 'README.md'), encoding='utf-8') as f:
         __doc__ = f.read()
 except Exception:  # weird file
-    requirements = ['rdkit-to-params', 'xerox', 'requests', 'pandas']
+    requirements = ['rdkit-to-params', 'xerox', 'requests', 'pandas', 'biopython']
     __doc__ = ''
 
 description = 'A variety of functions to make working with Pyrosetta easier.'
