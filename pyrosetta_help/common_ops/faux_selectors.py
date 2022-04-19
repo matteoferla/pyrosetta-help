@@ -81,7 +81,8 @@ def OrListSelector(*selectors) -> pyrosetta.rosetta.core.select.residue_selector
 # --------------------------------------------------------------------------------------------
 # not a a faux selector
 
-def get_bfactor_vector(pose: pyrosetta.Pose, cutoff: float, above=True) -> pyrosetta.rosetta.utility.vector1_bool:
+def get_bfactor_vector(pose: pyrosetta.Pose, cutoff: float,
+                       above:bool=True, include_ligands:bool=False) -> pyrosetta.rosetta.utility.vector1_bool:
     """
     Return a selection vector based on b-factors.
     above = get all above. So to select bad b-factors above is ``True``,
@@ -91,9 +92,16 @@ def get_bfactor_vector(pose: pyrosetta.Pose, cutoff: float, above=True) -> pyros
     vector = pyrosetta.rosetta.utility.vector1_bool(pose.total_residue())
     for r in range(1, pose.total_residue() + 1):
         try:
-            atom_index = pose.residue(r).atom_index('CA')
-        except AttributeError:
-            atom_index = 1
+            if not pose.residue(r).is_protein():
+                raise AttributeError
+                # not an amino acid...
+                # canonicals give AttributeError
+                # comp library give RuntimeError
+                # and Calcium...
+            atom_index =pose.residue(r).atom_index('CA')
+        except (AttributeError, RuntimeError):  # does not exist.
+            vector[r] = include_ligands
+            continue
         bfactor = pdb_info.bfactor(r, atom_index)
         if above and bfactor >= cutoff:
             vector[r] = True
