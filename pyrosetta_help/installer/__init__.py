@@ -61,6 +61,8 @@ def install_pyrosetta(username: Optional[str] = None,
     the evironmental variables ``PYROSETTA_USERNAME`` or ``PYROSETTA_PASSWORD`` are used.
     It checks to see if hashes of the password is correct or the Rosetta one.
     """
+    if check_pyrosetta():
+        print('PyRosetta is already installed.')
     # ## local version present?
     path = get_release_path(path)
     if path:
