@@ -4,6 +4,7 @@ from .utils import *
 from .minimize import *
 from .faux_selectors import *
 from .ss_changes import *
+from .distances import *
 try:
     from .nglview import nglview
 except ImportError:

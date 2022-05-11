@@ -1,13 +1,13 @@
 __all__ = ['add_pae_constraints',
            'add_interchain_pae_constraints',
            'add_stretch_constraint',
-           'get_distance_matrix',
-           'make_pae_constraint']
+           'make_pae_constraint',]
 
-from typing import (Optional)
+from typing import (Optional, List)
 
 import numpy as np
 import pyrosetta
+from ..common_ops.distances import measure_distance_matrix
 
 
 def add_pae_constraints(pose: pyrosetta.Pose,
@@ -38,9 +38,9 @@ def add_pae_constraints(pose: pyrosetta.Pose,
     """
     for r1_idx, r2_idx in np.argwhere(errors < cutoff):
         if abs(r1_idx - r2_idx) < adjecency_threshold:
-            continue # skip neighbours
+            continue  # skip neighbours
         elif r1_idx <= r2_idx:
-            continue # add once.
+            continue  # add once.
         d_error = errors[r1_idx, r2_idx]
         apc = make_pae_constraint(pose=pose,
                                   residue1_pose_idx=r1_idx + 1,
@@ -50,12 +50,13 @@ def add_pae_constraints(pose: pyrosetta.Pose,
                                   tolerance=tolerance)
         pose.add_constraint(apc)
 
+
 def make_pae_constraint(pose,
-                        residue1_pose_idx:int, # one indexed.
-                        residue2_pose_idx:int, # one indexed.
-                        error:float,
+                        residue1_pose_idx: int,  # one indexed.
+                        residue2_pose_idx: int,  # one indexed.
+                        error: float,
                         tolerance: Optional[float] = None,
-                        weight:float=1):
+                        weight: float = 1):
     get_ca = lambda r, i: pyrosetta.AtomID(atomno_in=r.atom_index('CA'), rsd_in=i)
     FlatHarmonicFunc = pyrosetta.rosetta.core.scoring.func.FlatHarmonicFunc
     HarmonicFunc = pyrosetta.rosetta.core.scoring.func.HarmonicFunc
@@ -76,7 +77,7 @@ def make_pae_constraint(pose,
 
 
 def add_interchain_pae_constraints(pose, errors, cutoff=15):
-    xdistances = get_distance_matrix(pose)
+    xdistances = measure_distance_matrix(pose)
     for c in (1, 2):
         xdistances[pose.chain_begin(c) - 1: pose.chain_end(c),
         pose.chain_begin(c) - 1: pose.chain_end(c)] = np.nan
@@ -127,27 +128,12 @@ def add_stretch_constraint(pose: pyrosetta.Pose,
         distance = (first_ca_xyz - last_ca_xyz).norm()
     # make & add con
     sf = pyrosetta.rosetta.core.scoring.func
-    AtomPairConstraint = pyrosetta.rosetta.core.scoring.constraints.AtomPairConstraint
+    AtomPairConstraint = pyrosetta.rosetta.core.scoring.constraints.AtomPairConstraint  # noqa
     if sigmoid:
         fun = sf.ScalarWeightedFunc(weight, sf.SigmoidFunc(x0_in=distance, slope_in=slope_in))
     else:
-        fun = sf.ScalarWeightedFunc(weight/distance, sf.IdentityFunc())
+        fun = sf.ScalarWeightedFunc(weight / distance, sf.IdentityFunc())
     con = AtomPairConstraint(first_ca, last_ca, fun)
     pose.add_constraint(con)
     return con
 
-def get_distance_matrix(pose) -> np.ndarray:
-    """
-    Note the distance matrix is zero indexed as it would be confusing using numpy with one indexed data.
-
-    :param pose:
-    :return:
-    """
-    distances = np.zeros((pose.total_residue(), pose.total_residue()))
-    ca_xyzs = [pose.residue(r).xyz('CA') for r in range(1, pose.total_residue() + 1)]
-    for i in range(len(ca_xyzs)):
-        for j in range(i):
-            d = ca_xyzs[i].distance(ca_xyzs[j])
-            distances[i, j] = d
-            distances[j, i] = d
-    return distances
