@@ -3,9 +3,9 @@ from typing import (Optional, Union, Dict, List)
 
 import pandas as pd
 import pyrosetta
+import types
 
 from .terms import term_meanings
-
 
 class WeightWatcher:
     """
@@ -44,7 +44,10 @@ class WeightWatcher:
       weight_table = ww.compare(['ref2015', 'beta_nov16'], different_only=True)
 
     """
-    folder = os.path.join(os.path.split(pyrosetta.__file__)[0], 'database', 'scoring', 'weights')
+    # PyRosetta may be a types.ModuleType but could be a unittest.mock.Mock object,
+    # so we need to check for that as the latter lacks __file__.
+    pyrosetta_folder = os.path.dirname(pyrosetta.__file__) if isinstance(pyrosetta, types.ModuleType) else '.'
+    folder = os.path.join(pyrosetta_folder, 'database', 'scoring', 'weights')
     term_meanings = term_meanings
 
     # def __init__(self):
