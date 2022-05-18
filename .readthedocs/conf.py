@@ -17,16 +17,20 @@
 # -- pyrosetta install -------------------------------------------------------
 import os
 
-# import pyrosetta_help
-# pyrosetta_help.install_pyrosetta(username=os.environ.get('PYROSETTA_USERNAME'),
-#                                  password=os.environ.get('PYROSETTA_PASSWORD'),
-#                                  )
+from importlib import reload
+import pyrosetta_help
+
+pyrosetta_help.install_pyrosetta(username=os.environ.get('PYROSETTA_USERNAME'),
+                                 password=os.environ.get('PYROSETTA_PASSWORD'),
+                                 )
+reload(pyrosetta_help)
 
 
-from unittest.mock import MagicMock
-import sys
-
-sys.modules['pyrosetta'] = MagicMock()
+# this raises too many errors:
+# from unittest.mock import MagicMock
+# import sys
+#
+# sys.modules['pyrosetta'] = MagicMock()
 
 # -- Project information -----------------------------------------------------
 
