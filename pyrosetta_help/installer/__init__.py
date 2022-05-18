@@ -12,15 +12,26 @@ import re
 import requests
 import site
 import sys
+from warnings import warn
 from typing import (Optional)
 from ._aux import *
-
+from unittest.mock import Mock
 
 def check_pyrosetta() -> bool:
     """
-    this will return none if it is not installed regardless if it segfaults or there's a missing dependency.
+    this will return True if
+
+    * it is installed regardless if it segfaults or there's a missing dependency
+    * something called pyrosetta has been loaded, including a Mock
     """
-    return importlib.util.find_spec('pyrosetta') is not None
+
+    if 'pyrosetta' in sys.modules and isinstance(sys.modules['pyrosetta'], Mock):
+        warn('PyRosetta is imported as a Mock module. This is not a problem for annotations etc, but it will not work.')
+        return True
+    elif 'pyrosetta' in sys.modules:
+        return True
+    else:
+        return importlib.util.find_spec('pyrosetta') is not None
 
 
 def download_pyrosetta(username: Optional[str] = None,
