@@ -1,9 +1,22 @@
 # pyrosetta helper functions
 Some functions that I keep using over and over as a Python module.
 
-> **Disclaimer**: I am not affiliated with PyRosetta, I am just an avid user.
-> My usage does not constitute an endorsement of PyRosetta by the BRC, NIHR, Wellcome Trust, the University of Oxford,
-> the United Kingdom of Great Britain + Northern Ireland + all its dependencies etc. etc.
+[![Read the Docs](https://img.shields.io/readthedocs/pyrosetta-help)](https://pyrosetta-help.readthedocs.io/en/latest/index.html)
+[![https img shields io pypi v pyrosetta help logo python](https://img.shields.io/pypi/v/pyrosetta--help?logo=python)](https://pypi.org/project/pyrosetta-help)
+[![https img shields io pypi pyversions pyrosetta help logo python](https://img.shields.io/pypi/pyversions/pyrosetta--help?logo=python)](https://pypi.org/project/pyrosetta-help)
+[![https img shields io pypi wheel pyrosetta help logo python](https://img.shields.io/pypi/wheel/pyrosetta--help?logo=python)](https://pypi.org/project/pyrosetta-help)
+[![https img shields io pypi status pyrosetta help logo python](https://img.shields.io/pypi/status/pyrosetta--help?logo=python)](https://pypi.org/project/pyrosetta-help)
+[![https img shields io pypi dm pyrosetta help logo python](https://img.shields.io/pypi/dm/pyrosetta_help?logo=python)](https://pypi.org/project/pyrosetta-help)
+[![https img shields io github forks matteoferla pyrosetta_help label Fork style social logo github](https://img.shields.io/github/forks/matteoferla/pyrosetta_help?label=Fork&style=social&logo=github)](https://github.com/matteoferla/pyrosetta_help)
+[![https img shields io github stars matteoferla pyrosetta_help style social logo github](https://img.shields.io/github/stars/matteoferla/pyrosetta_help?style=social&logo=github)](https://github.com/matteoferla/pyrosetta_help)
+[![https img shields io github watchers matteoferla pyrosetta_help label Watch style social logo github](https://img.shields.io/github/watchers/matteoferla/pyrosetta_help?label=Watch&style=social&logo=github)](https://github.com/matteoferla/pyrosetta_help)
+[![https img shields io github last commit matteoferla pyrosetta_help logo github](https://img.shields.io/github/last-commit/matteoferla/pyrosetta_help?logo=github)](https://github.com/matteoferla/pyrosetta_help)
+[![https img shields io github license matteoferla pyrosetta_help logo github](https://img.shields.io/github/license/matteoferla/pyrosetta_help?logo=github)](https://github.com/matteoferla/pyrosetta_help/raw/master/LICENCE)
+[![https img shields io github commit activity m matteoferla pyrosetta_help logo github](https://img.shields.io/github/commit-activity/m/matteoferla/pyrosetta_help?logo=github)](https://github.com/matteoferla/pyrosetta_help)
+[![https img shields io github issues matteoferla pyrosetta_help logo github](https://img.shields.io/github/issues/matteoferla/pyrosetta_help?logo=github)](https://github.com/matteoferla/pyrosetta_help)
+[![https img shields io github issues closed matteoferla pyrosetta_help logo github](https://img.shields.io/github/issues-closed/matteoferla/pyrosetta_help?logo=github)](https://github.com/matteoferla/pyrosetta_help)
+
+## Installation
 
 ```bash
 pip3 install pyrosetta-help
@@ -270,3 +283,18 @@ These could quickly be made into classes... but hey
 
 * [phoshosite plus to pyrosetta](phospho_snippets.md)
 * [distance matrix of chains](distances_snippets.md)
+
+## Legal disclaimer
+
+I (Matteo Ferla) am not affiliated with PyRosetta, I am just an avid user.
+My usage does not constitute an endorsement of PyRosetta by the BRC, NIHR, Wellcome Trust, the University of Oxford,
+the United Kingdom of Great Britain + Northern Ireland + all its dependencies etc. etc.
+
+
+[![Matteo Ferla orcid](https://img.shields.io/badge/orcid-0000--0002--5508--4673-a6ce39?logo=orcid)](https://orcid.org/0000--0002--5508--4673)
+[![Matteo Ferla googlescholar](https://img.shields.io/badge/google--scholar-gF--bp_cAAAAJ-success?logo=googlescholar)](https://scholar.google.com/citations?user=gF--bp_cAAAAJ&hl=en)
+[![Matteo Ferla twitter](https://img.shields.io/twitter/follow/matteoferla?label=Follow&logo=twitter)](https://twitter.com/matteoferla) 
+[![Matteo Ferla stackoverflow](https://img.shields.io/stackexchange/stackoverflow/r/4625475?logo=stackoverflow)](https://stackoverflow.com/users/4625475)
+[![Matteo Ferla stackexchange](https://img.shields.io/stackexchange/bioinformatics/r/6322?logo=stackexchange)](https://bioinformatics.stackexchange.com/users/6322) 
+[![Matteo Ferla googlemail](https://img.shields.io/badge/email-gmail-informational&logo=googlemail)](https://mailhide.io/e/Ey3RNO2G) 
+[![Matteo Ferla Oxford](https://img.shields.io/badge/email-Oxford-informational&logo=googlemail)](https://mailhide.io/e/Y1dbgyyE)
