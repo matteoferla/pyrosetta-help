@@ -10,6 +10,7 @@ Welcome to pyrosetta_help's documentation!
    :maxdepth: 4
    :caption: Contents:
 
+   introduction
    pyrosetta_help
 
 
