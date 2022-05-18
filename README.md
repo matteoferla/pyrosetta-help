@@ -132,7 +132,7 @@ print(get_log_entries('ERROR'))
 ## Common operations
 
 Import a file, while dealing with the param files
-```jupyterpython
+```python
 from pyrosetta_help.common_ops import pose_from_file
 pose = pose_from_file('combined.relaxed2.pdb', params_filenames=['35G.params','CMP.params', 'ATP.params', 'NME.params'])
 ```
@@ -145,13 +145,13 @@ scores = pose2pandas(pose)
 scores.loc[scores.total_score > 10][['residue', 'total_score']]
 ```
 Convert a selector to a list of str of NGL selector style `[resn]resi:chain` 
-```jupyterpython
+```python
 ligand = pyrosetta.rosetta.core.chemical.ResidueProperty.LIGAND
 lig_sele = pyrosetta.rosetta.core.select.residue_selector.ResiduePropertySelector(ligand)
 clarify_selector(lig_sele, pose)
 ```
 Local relax, etc.
-```jupyterpython
+```python
 ed = prep_ED(pose, map_filename)
 local_scorefxn = get_local_scorefxn()
 local_relax = get_local_relax()
