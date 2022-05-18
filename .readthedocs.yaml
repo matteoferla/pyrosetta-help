@@ -4,6 +4,11 @@ build:
   os: ubuntu-20.04
   tools:
     python: "3.8"
+  jobs:
+    post_install:
+      - install_pyrosetta
+      # `install_pyrosetta` is added by pyrosetta_help and requires the presence of
+      # PYROSETTA_USERNAME and PYROSETTA_PASSWORD env variables.
 
 sphinx:
    configuration: .readthedocs/conf.py

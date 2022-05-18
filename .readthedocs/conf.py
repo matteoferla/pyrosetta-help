@@ -17,13 +17,15 @@
 # -- pyrosetta install -------------------------------------------------------
 import os
 
-from importlib import reload
-import pyrosetta_help
-
-pyrosetta_help.install_pyrosetta(username=os.environ.get('PYROSETTA_USERNAME'),
-                                 password=os.environ.get('PYROSETTA_PASSWORD'),
-                                 )
-reload(pyrosetta_help)
+# this does not seem to work here due to bad reload
+# from importlib import reload
+# import pyrosetta_help
+# print('Installing pyrosetta...')
+# pyrosetta_help.install_pyrosetta(username=os.environ.get('PYROSETTA_USERNAME'),
+#                                  password=os.environ.get('PYROSETTA_PASSWORD'),
+#                                  )
+# reload(pyrosetta_help)
+# import pyrosetta
 
 
 # this raises too many errors:
