@@ -476,6 +476,8 @@ class MutantScorer:
         This method adapted from a notebook of mine, but not from an official source, is not well written.
         It should be a filter and score combo.
 
+        Used ``BackrubMover``
+
         It returns the largest bb_rmsd of the pdb residue resi following backrub.
         """
         # this code is experimental
@@ -520,3 +522,24 @@ class MutantScorer:
                 if r > best_r:
                     best_r = r
         return best_r
+
+    # ======= Utility functions ==========
+
+    @staticmethod
+    def convert_name3_to_name1_mutation(mutation: str):
+        """
+        Converts a mutation in name3 / 3-letter format to name1 / 1-letter format   (e.g. p.Ala123Ile -> A123I)
+        """
+        def convert_name3_to_name1(name3: str) -> str:
+            """
+            This is horrendous and will segfult if there is no name3
+            It is an interim quick fix as I just need to copy a dictionary.
+            """
+            rts = pyrosetta.Pose().residue_type_set_for_pose()
+            rt = rts.get_representative_type_name3(name3.upper())
+            return rt.name1()
+
+        matched = re.search(r'(?P<from>\w{3})(?P<i>\d+)(?P<to>\w{3})', mutation)
+        if not matched:
+            return None
+        return f'{convert_name3_to_name1(matched["from"])}{matched["i"]}{convert_name3_to_name1(matched["to"])}'

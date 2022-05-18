@@ -109,3 +109,4 @@ class LigandHunter:
             entry['ligand_codes'] = [inner['chem_comp_id'] for inner in datum]
             entry['cofactor_codes'] = [code for code in entry['ligand_codes'] if code in self.cofactor_codes]
             entry['has_cofactor'] = bool(entry['cofactor_codes'])
+        # TODO find the part of the code that is somehow truncated between commits!!

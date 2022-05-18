@@ -80,6 +80,11 @@ def install_pyrosetta(username: Optional[str] = None,
 
 
 def parse():
+    """
+    Parse command line arguments ``-h`` for help.
+
+    :return:
+    """
     if check_pyrosetta():
         print('PyRosetta is already installed.')
         SystemExit(0)

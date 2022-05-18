@@ -3,10 +3,16 @@ __all__ = ['measure_distance_matrix',
            'measure_inter_residue_distance']
 
 from typing import (Optional, List)
+from types import ModuleType
 
 import numpy as np
 import pyrosetta
 import itertools
+
+residue_selector = pyrosetta.rosetta.core.select.residue_selector  # ModuleType
+utility = pyrosetta.rosetta.utility  # noqa: F821
+chemical = pyrosetta.rosetta.core.chemical  # ModuleType
+
 
 def measure_distance_matrix(pose) -> np.ndarray:
     """
@@ -41,9 +47,6 @@ def measure_ligand_distances(pose: pyrosetta.Pose, target_residue_idx: int) -> L
         distances:List[dict] = ph.get_ligand_distances(pose, 20)
         closest = sorted(distances, key=operator.itemgetter('distance'))[0]
     """
-    residue_selector = pyrosetta.rosetta.core.select.residue_selector
-    utility = pyrosetta.rosetta.utility  # noqa: F821
-    chemical = pyrosetta.rosetta.core.chemical
     lig_vector: utility.vector1_bool = residue_selector.ResiduePropertySelector(chemical.ResidueProperty.LIGAND) \
         .apply(pose)
     lig_resis: utility.vector1_unsigned_long = residue_selector.ResidueVector(lig_vector)
@@ -52,7 +55,7 @@ def measure_ligand_distances(pose: pyrosetta.Pose, target_residue_idx: int) -> L
     for ligand in map(pose.residue, lig_resis):  #: pyrosetta.Residue
         distances.append(dict(ligand_name=ligand.name3(),
                               ligand_idx=ligand.seqpos(),
-                              distance=measure_inter_residue_distance(pose, target_residue, ligand)
+                              distance=measure_inter_residue_distance(pose, target_residue_idx, ligand.seqpos())
                               )
                          )
     return distances
