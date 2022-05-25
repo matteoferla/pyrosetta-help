@@ -9,7 +9,7 @@ import requests
 
 def pose_from_alphafold2(uniprot: str) -> pyrosetta.Pose:
     reply = requests.get(f'https://alphafold.ebi.ac.uk/files/AF-{uniprot}-F1-model_v2.pdb')
-    assert reply.status_code == 200
+    reply.raise_for_status()
     pdbblock = reply.text
     pose = pyrosetta.Pose()
     pyrosetta.rosetta.core.import_pose.pose_from_pdbstring(pose, pdbblock)
@@ -27,7 +27,7 @@ def get_alphafold2_error(uniprot: str, reshaped=True) -> Union[np.ndarray, list]
     """
     # https://alphafold.ebi.ac.uk/files/AF-Q00341-F1-predicted_aligned_error_v1.json
     reply = requests.get(f'https://alphafold.ebi.ac.uk/files/AF-{uniprot}-F1-predicted_aligned_error_v2.json')
-    assert reply.status_code == 200
+    reply.raise_for_status()
     errors = reply.json()
     if reshaped:
         return reshape_errors(errors)

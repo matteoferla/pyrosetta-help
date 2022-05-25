@@ -36,7 +36,7 @@ def _download_ccp4_map(code:str):
     url = f'https://www.ebi.ac.uk/pdbe/coordinates/files/{code.lower()}.ccp4'
     file_path = f'{code}.ccp4'
     reply = requests.get(url, stream=True)
-    assert reply.status_code == 200
+    reply.raise_for_status()
     with open(file_path, 'wb') as f:
         reply.raw.decode_content = True
         shutil.copyfileobj(reply.raw, f)
