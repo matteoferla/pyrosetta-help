@@ -57,6 +57,18 @@ def make_pae_constraint(pose,
                         error: float,
                         tolerance: Optional[float] = None,
                         weight: float = 1):
+    """
+    Add a constraint between two residues based on the PAE error
+    from AlphaFold2 (the colourful heatmap in EBI-AF2).
+
+    :param pose:
+    :param residue1_pose_idx:
+    :param residue2_pose_idx:
+    :param error:
+    :param tolerance:
+    :param weight:
+    :return:
+    """
     get_ca = lambda r, i: pyrosetta.AtomID(atomno_in=r.atom_index('CA'), rsd_in=i)
     FlatHarmonicFunc = pyrosetta.rosetta.core.scoring.func.FlatHarmonicFunc
     HarmonicFunc = pyrosetta.rosetta.core.scoring.func.HarmonicFunc
@@ -77,6 +89,15 @@ def make_pae_constraint(pose,
 
 
 def add_interchain_pae_constraints(pose, errors, cutoff=15):
+    """
+    Add constraints between residues that are interacting according to the PAE error matrix
+    but are in different 'chains' (sensu PyRosetta FoldTree).
+
+    :param pose:
+    :param errors:
+    :param cutoff:
+    :return:
+    """
     xdistances = measure_distance_matrix(pose)
     for c in (1, 2):
         xdistances[pose.chain_begin(c) - 1: pose.chain_end(c),

@@ -82,18 +82,7 @@ def setup(app):
 # -- Options for HTML output -------------------------------------------------
 
 html_theme = 'sphinx_rtd_theme'
-
-# Add any paths that contain custom static files (such as style sheets) here,
-# relative to this directory. They are copied after the builtin static files,
-# so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = []
-
-
-# -- Extension configuration -------------------------------------------------
-
-# -- Options for todo extension ----------------------------------------------
-
-# If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
 
 # --- add md files ---------------------------------------------------------
@@ -116,4 +105,4 @@ def convert_write(markdown_filename, srt_filename, change_title:Optional[str]=No
     with open(srt_filename, 'w') as fh:
         fh.write(rst_block)
 
-convert_write(os.path.join(repo_base_path, 'README.md'), 'introduction.rst', 'pyrosetta-help overview')
+convert_write(os.path.join(repo_base_path, 'README.md'), 'introduction.rst', 'Overview')

@@ -4,7 +4,7 @@ import numpy as np
 
 def make_pae_plot(errors: np.ndarray) -> 'plotly.import graph_objs.Figure':
     """
-    Make AlphaFold2-EBI like PAE plot
+    Make AlphaFold2-EBI–like PAE plot (green and white)
     """
     import plotly.express as px
     fig = px.imshow(errors, color_continuous_scale=[(0, 'green'), (1, 'white')])

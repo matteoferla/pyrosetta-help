@@ -8,6 +8,12 @@ import requests
 
 
 def pose_from_alphafold2(uniprot: str) -> pyrosetta.Pose:
+    """
+    Returns a pose from the alphafold2 server.
+
+    :param uniprot: uniprot id ("accession"), not gene name or uniprot name.
+    :return:
+    """
     reply = requests.get(f'https://alphafold.ebi.ac.uk/files/AF-{uniprot}-F1-model_v2.pdb')
     reply.raise_for_status()
     pdbblock = reply.text

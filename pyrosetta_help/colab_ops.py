@@ -6,15 +6,21 @@ __all__ = ['get_shell_mode', 'assert_notebook', 'mount_google_drive', 'install_a
 
 def get_shell_mode() -> str:
     """
-    The ``get_ipython().__class__.__name__`` is very nasty, replacing it with
+    The ``get_ipython().__class__.__name__`` is a very nasty name, this replaces it with
+    a nicer name for humans:
+
+    * ``Shell``: 'colab'
+    * ``ZMQInteractiveShell``: 'jupyter'
+    *  TerminalInteractiveShell: 'terminal'
+    * None: 'impossible'
     """
     # get_ipython is a standard libary in ipython, but not script
     from IPython import get_ipython
     shell_name = get_ipython().__class__.__name__
     nicer_names = {'Shell': 'colab',
                    'ZMQInteractiveShell': 'jupyter',
-                   'TerminalInteractiveShell': 'ipython',
-                   None: 'terminal'}
+                   'TerminalInteractiveShell': 'terminal',
+                   None: 'impossible'}
     if shell_name in nicer_names:
         return nicer_names[shell_name]
     else:
@@ -22,6 +28,9 @@ def get_shell_mode() -> str:
 
 
 def assert_notebook():
+    """
+    Raises an error if the current environment is not a notebook.
+    """
     shell_name: str = get_shell_mode()
     if shell_name not in ('colab', 'jupyter'):
         raise RuntimeError(f'This is a colabs notebook. Why are you running it in {shell_name}?')

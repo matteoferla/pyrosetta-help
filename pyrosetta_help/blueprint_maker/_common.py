@@ -11,15 +11,30 @@ class BlueprinterCommon:
             pass
 
     def del_span(self, start: int, stop: int):
+        """
+        Deletes the span of residues from start to stop.
+        To not segfault, the preceding and subsequent residue is mutated to the native residue.
+        """
         self.pick_native(start - 1)
         del self[start:stop]
         self.pick_native(start + 1)
 
     def wobble_span(self, start: int, stop: int):
+        """
+        "Wobbles" the span of residues from start to stop.
+        By wobbling, we mean that the residues are mutated to the native residue.
+        """
         for resi in range(start,stop+1):
             self.pick_native(resi)
 
     def mutate(self, resi: int, to_resn: str):
+        """
+        Mutates the residue at resi to to_resn (PIKAA)
+
+        :param resi:
+        :param to_resn:
+        :return:
+        """
         self.pick_native(resi - 1)
         self[resi] = f'PIKAA {to_resn}'
         self.pick_native(resi + 1)

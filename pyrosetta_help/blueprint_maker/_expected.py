@@ -4,12 +4,16 @@ import pyrosetta
 class BlueprinterExpected:
     def expected_seq(self):
         """
-
-        :return:
+        Returns the sequence as expected by the blueprint.
+        Calls iteratively ``get_expected_aa_from_row``
         """
         return ''.join([self.get_expected_aa_from_row(row) for row in self])
 
     def get_expected_aa_from_row(self, row: List[str]) -> str:
+        """
+        Give a row of the blueprint, return the expected amino acid.
+        Called by ``expected_seq``.
+        """
         if len(row) == 0: # impossible
             return ''
         elif len(row) == 3 and row[2] == '.': # "30 K ."
@@ -23,15 +27,13 @@ class BlueprinterExpected:
         else: # ALLAA etc..
             return '*'
 
-    def show_aligned(self, pose):
+    def show_aligned(self, pose) -> None:
         """
         notebook output alignment of pose seq and blueprint expectation
-        :param pose:
-        :return:
         """
         self.show_seq_aligned(pose.sequence(), self.expected_seq())
 
-    def _show_alignment(self, alignment: list):
+    def _show_alignment(self, alignment: list) -> None:
         from Bio import pairwise2
         from IPython.display import display, HTML
         formatted = pairwise2.format_alignment(*alignment)
@@ -42,9 +44,15 @@ class BlueprinterExpected:
         #ignore pycharm. typehint for display is wrong.
 
     def show_poses_aligned(self, pose_A, pose_B):
+        """
+        Show the sequence alignment of two poses.
+        """
         self.show_seq_aligned(pose_A.sequence(), pose_B.sequence())
 
-    def show_seq_aligned(self, seq_A: str, seq_B:str):
+    def show_seq_aligned(self, seq_A: str, seq_B:str) -> List[str]:
+        """
+        Show the alignment of two sequences.
+        """
         from Bio import pairwise2
         alignment = pairwise2.align.globalxx(seq_A, seq_B)[0]
         self._show_alignment(alignment)
@@ -70,6 +78,13 @@ class BlueprinterExpected:
         return altered
 
     def correct_and_relax(self, pose: pyrosetta.Pose):
+        """
+        Runs ``correct`` and then relaxes the pose.
+        The former is the last resort fix of a bad blueprint result.
+
+        :param pose:
+        :return:
+        """
         altered = self.correct(pose)
         movemap = pyrosetta.MoveMap()
         NeighborhoodResidueSelector = pyrosetta.rosetta.core.select.residue_selector.NeighborhoodResidueSelector

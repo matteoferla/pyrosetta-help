@@ -89,7 +89,19 @@ install_pyrosetta(username= username,
                   hash_comparison_required=True)
 ```
 
-Another option 
+In the case of a ReadTheDocs confuguration, adding `pyrosetta_help` to the `requirements.txt` file and
+then adding in `builds` of the `.readthedocs.yml` file the following:
+
+```yaml
+builds:
+  ...
+  jobs:
+    post_install:
+      - install_pyrosetta
+```
+
+And then adding in advanced options the private environment variables `PYROSETTA_USERNAME` and `PYROSETTA_PASSWORD`,
+will result in a sucessful build.
 
 ## Starting up
 
@@ -111,12 +123,12 @@ This just converts the key:value pairs to a command line string for the pyrosett
 
 ```python
 import pyrosetta
-from pyrosetta_help import make_option_string, configure_logger, get_log_entries
+import pyrosetta_help as ph
 
 # capture to log
-logger = configure_logger()
+logger = ph.configure_logger()
 # give CLI attributes in a civilised way
-pyrosetta.distributed.maybe_init(extra_options=make_option_string(no_optH=False,
+pyrosetta.distributed.maybe_init(extra_options=ph.make_option_string(no_optH=False,
                                                 ex1=None,
                                                 ex2=None,
                                                 #mute='all',
@@ -126,48 +138,51 @@ pyrosetta.distributed.maybe_init(extra_options=make_option_string(no_optH=False,
                                )
 # ...
 # show relevant error
-print(get_log_entries('ERROR')) 
+print(ph.get_log_entries('ERROR')) 
 ```  
 
 ## Common operations
 
 Import a file, while dealing with the param files
 ```python
-from pyrosetta_help.common_ops import pose_from_file
-pose = pose_from_file('combined.relaxed2.pdb', params_filenames=['35G.params','CMP.params', 'ATP.params', 'NME.params'])
+import pyrosetta_help as ph
+pose = ph.pose_from_file('combined.relaxed2.pdb', params_filenames=['35G.params','CMP.params', 'ATP.params', 'NME.params'])
 ```
 I have somewhere one that via rdkit_to_params starts with a dict of residue:SMILES. TODO find.
 
 Get pandas dataframe of score
 ```python
-from pyrosetta_help import pose2pandas
-scores = pose2pandas(pose)
+import pyrosetta_help as ph
+scores = ph.pose2pandas(pose)
 scores.loc[scores.total_score > 10][['residue', 'total_score']]
 ```
 Convert a selector to a list of str of NGL selector style `[resn]resi:chain` 
 ```python
+import pyrosetta_help as ph
 ligand = pyrosetta.rosetta.core.chemical.ResidueProperty.LIGAND
 lig_sele = pyrosetta.rosetta.core.select.residue_selector.ResiduePropertySelector(ligand)
-clarify_selector(lig_sele, pose)
+ph.clarify_selector(lig_sele, pose)
 ```
 Local relax, etc.
 ```python
-ed = prep_ED(pose, map_filename)
-local_scorefxn = get_local_scorefxn()
-local_relax = get_local_relax()
+import pyrosetta_help as ph
+map_filename:str = ph.download_map('1A2A') # cryoEM require EMD codes
+ed = ph.prep_ED(pose, map_filename)
+local_scorefxn = ph.get_local_scorefxn()
+local_relax = ph.get_local_relax()
 local_relax.apply(pose)
 ```
 
-Note, `add_bfactor_from_score` is unstable!
+Note, `ph.add_bfactor_from_score` is unstable!
     
 ## score_mutants
 
 Given a list of mutants and pose, score them. scorefunction terms, interface, movement etc.
 
 ```python
-from pyrosetta_help import MutantScorer, Mutation, extend_scores
+import pyrosetta_help as ph
 
-model = MutantScorer(pose, modelname='test')
+model = ph.MutantScorer(pose, modelname='test')
 model.scorefxn = pyrosetta.create_score_function('ref2015')
 model.strict_about_starting_residue = True
 data = model.score_mutations(['p.Met1Gly', 'p.Ser29Glu'],
@@ -179,7 +194,7 @@ data = model.score_mutations(['p.Met1Gly', 'p.Ser29Glu'],
 import pandas as pd
 
 scores = pd.DataFrame(data)
-extend_scores(scores)
+ph.extend_scores(scores)
 ```
     
 The function `extend_scores` adds 6 columns, specifying which terms is the biggest changer.
@@ -286,7 +301,7 @@ These could quickly be made into classes... but hey
 
 ## Legal disclaimer
 
-I (Matteo Ferla) am not affiliated with PyRosetta, I am just an avid user.
+I (Matteo Ferla) am not affiliated with PyRosetta or Rosetta Commons, I am just an avid user.
 My usage does not constitute an endorsement of PyRosetta by the BRC, NIHR, Wellcome Trust, the University of Oxford,
 the United Kingdom of Great Britain + Northern Ireland + all its dependencies etc. etc.
 
