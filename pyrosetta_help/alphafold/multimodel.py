@@ -341,7 +341,7 @@ class AF2NotebookAnalyser:
         bfactors = [pbd_info.bfactor(r, pose.residue(r).atom_index('CA')) for r in residues]
         return np.median(bfactors)
 
-    def get_median_interface_bfactors(self) -> Dict[float]:
+    def get_median_interface_bfactors(self) -> Dict[int, float]:
         """
         "bfactors" aren't actually bfactors, but pLDDT values.
         Based on what are the residues identified with ``find_interface_residues``
