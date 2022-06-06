@@ -157,18 +157,26 @@ def get_latest_release_url(username: str,
     os_specific = f'PyRosetta4.Release.python{py_version}.{machine}'
     if wheel:
         os_specific += '.wheel'
-    base_url = f'https://{username}:{password}@graylab.jhu.edu/download/PyRosetta4/archive/release/{os_specific}'
-    url_to_latest = f'{base_url}/latest.html'
-    latest_response = requests.get(url_to_latest,
-                                   # auth=requests.auth.HTTPBasicAuth(username, password)
-                                   )
-    if latest_response.status_code == 401:
-        raise ValueError('Incorrect username or password!')
-    elif latest_response.status_code not in (200, 300, 301, 302, 303, 304, 305, 306, 307, 308):
-        from IPython.display import display, HTML
-        display(HTML(latest_response.text))
-        raise ValueError(f'Something is wrong with the url {url_to_latest}')
-    return base_url + '/' + re.search(r'[uU][rR][lL]=(.*?)["\s]', latest_response.text).group(1)
+    for domain in ('graylab.jhu.edu/download/PyRosetta4/archive/release',
+                   'west.rosettacommons.org/pyrosetta/release/release'):
+        base_url = f'https://{username}:{password}@{domain}/{os_specific}'
+        url_to_latest = f'{base_url}/latest.html'
+        latest_response = requests.get(url_to_latest,
+                                       # auth=requests.auth.HTTPBasicAuth(username, password)
+                                       )
+        if latest_response.status_code == 401:
+            raise ValueError('Incorrect username or password!')
+        elif latest_response.status_code not in (200, 300, 301, 302, 303, 304, 305, 306, 307, 308):
+            from IPython.display import display, HTML
+            display(HTML(latest_response.text))
+            warn(f'Something is wrong with the url {url_to_latest}')
+            continue
+        return base_url + '/' + re.search(r'[uU][rR][lL]=(.*?)["\s]', latest_response.text).group(1)
+    else:
+        raise ValueError('Neither coast mirror works: '+
+                         'they are both down or '+
+                         'you are not connected to the internet or '+
+                         'the addresses have been changed.')
 
 
 if __name__ == '__main__':
