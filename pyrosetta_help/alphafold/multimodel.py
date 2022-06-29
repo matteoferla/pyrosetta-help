@@ -13,7 +13,7 @@ pr_rs = pyrosetta.rosetta.core.select.residue_selector
 from .retrieval import reshape_errors
 from .constraints import add_pae_constraints, add_interchain_pae_constraints
 from ..common_ops import pose_from_file
-import pickle
+import pickle, warnings
 from collections import defaultdict
 
 
@@ -81,21 +81,25 @@ class AF2NotebookAnalyser:
         # group files
         ranked_filenames = {}
         for filename in filenames:
-            if not re.match('rank_\d+.*\.pdb', filename):
+            if not re.search('rank_\d+.*\.pdb', filename):
                 continue
-            rex = re.match('rank_(\d+)_model_(\d+).*seed_(\d+)(.*)\.pdb', filename)
-            rank = int(rex.group(1))
-            model = int(rex.group(2))
-            seed = int(rex.group(3))
-            other = rex.group(4)
-            if rank in ranked_filenames and ranked_filenames[rank]['relaxed'] == True:
+            # kcc2dimer_42460_unrelaxed_rank_1_model_5.pdb
+            # rex = re.match('rank_(\d+)_model_(\d+).*seed_(\d+)(.*)\.pdb', filename)
+            rex = re.search('(?P<name>.*)_(?P<seed>\d+)_(?P<state>\w+)_rank_(?P<rank>\d+)_model_(?P<model>\d+)\.pdb',
+                            filename)
+            name = rex.group('name')
+            state = 'unrelaxed' not in rex.group('state')
+            rank = int(rex.group('rank'))
+            model = int(rex.group('model'))
+            seed = int(rex.group('seed'))
+            if rank in ranked_filenames and ranked_filenames[rank]['relaxed']:
                 continue
             data = dict(name=filename,
                         path=os.path.join(self.folder, filename),
                         rank=rank,
                         model=model,
                         seed=seed,
-                        relaxed='_relaxed' in other
+                        relaxed=state
                         )
             ranked_filenames[rank] = data
         # make dataframe
@@ -105,7 +109,12 @@ class AF2NotebookAnalyser:
         # add data from settings.
         pLDDTs = {}
         pTMscores = {}
-        with open(os.path.join(self.folder, 'settings.txt'), 'r') as fh:
+        settings_filename = os.path.join(self.folder, 'settings.txt')
+        if not os.path.exists(settings_filename):
+            warnings.warn(f'{settings_filename} missing!')
+            self.scores['pLDDT'] = self.scores['rank'].apply(lambda r: 100)
+            self.scores['pTMscore'] = self.scores['rank'].apply(lambda r: 100)
+        with open(settings_filename, 'r') as fh:
             for match in re.findall('rank_(\d+).*pLDDT\:(\d+\.\d+)\ pTMscore:(\d+\.\d+)', fh.read()):
                 pLDDTs[int(match[0])] = float(match[1])
                 pTMscores[int(match[0])] = float(match[2])
@@ -133,11 +142,12 @@ class AF2NotebookAnalyser:
         """
         errors = dict()
         for i, row in self.scores.iterrows():
-            filename = row['path'].replace('.pdb', '.json') \
-                .replace('_unrelaxed', '_pae') \
-                .replace('_relaxed', '_pae')
+            filename = row['path'].replace('.pdb', '_scores.json')
+            # .replace('_unrelaxed', '_pae') \
+            # .replace('_relaxed', '_pae')
+            # kcc2dimer_42460_unrelaxed_rank_1_model_5_scores.json
             with open(filename, 'r') as fh:
-                errors[row['rank']] = reshape_errors(json.load(fh))
+                errors[row['rank']] = np.array(json.load(fh)['pae'])
         return errors
 
     def _generator_poses(self, groupname: str = 'relaxed'):
