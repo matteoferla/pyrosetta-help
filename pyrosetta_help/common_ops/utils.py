@@ -7,14 +7,20 @@ __all__ = ['pose_from_file',
            'count_ligands',
            'correct_numbering',
            'get_pdbstr',
-           'pose_range']
+           'pose_range',
+           'fix_offset',
+           'assign_chain_letter',
+           'what_is_chain']
 
 from collections import Counter
 from typing import (Optional, Tuple, Union, Iterable, Counter, List)
-
+from Bio import pairwise2
+from IPython.display import display, HTML
+import string
 import numpy as np
 import pandas as pd
 import pyrosetta
+import functools
 
 
 def pose_from_file(pdb_filename: str,
@@ -157,10 +163,14 @@ def count_ligands(pose: pyrosetta.Pose) -> List[Tuple[str, int]]:
     count = Counter([pose.residue(i).name3() for i in pr_rs.ResidueVector(lig_sele.apply(pose))])
     return count.most_common()
 
-def correct_numbering(pose):
+def correct_numbering(pose, chain_references:Optional[Union[None, str]]=None, allow_insertions:bool=False):
     """
     A fresh PDBInfo has the PDB residue number the same as the pose one
-    as opposed to restarting per chain.
+    as opposed to restarting per chain this fixes it.
+
+    Additionaly, if the list ``chain_references`` is provided, any element as None is ignored,
+    but any element with a sequence (str) where the first char is pos 1, will be used
+    for numbering by calling ``fix_offset``.
 
     :param pose:
     :return:
@@ -180,6 +190,74 @@ def correct_numbering(pose):
         else:
             pdb_info.number(i, r)
             r += 1
+    if not chain_references:
+        return
+    for i, ref_sequence in enumerate(chain_references):
+        chain_i = i + 1
+        if ref_sequence is None:
+            continue
+        assert isinstance(ref_sequence, str)
+        fix_offset(pose, chain_i, ref_sequence, allow_insertions)
+
+
+def fix_offset(pose, chain_i: int, ref_sequence: str, allow_insertions:bool=False) -> HTML:
+    """
+    Fix the pose numbering on ``chain_i`` based on ``ref_sequence``
+    No gaps accepted in ref_sequence if ``allow_insertions`` is False, so pad with Xs appropriately if only termini.
+    If ``allow_insertions`` is True, insertion codes are used.
+    """
+    pdb_info = pose.pdb_info()
+    assert not pdb_info.obsolete(), "pdb info is marked as obsolete"
+    # ## Align
+    alignment = pairwise2.align.globalms(ref_sequence,
+                                         pose.chain_sequence(chain_i),
+                                         1, -2,  # penalise mismatches by x2
+                                         -1, -0.5  # penalise extension by 1/2
+                                         )[0]
+    # this is relative to alignment and not unaligned seqA, so may have gaps if insertions are allowed:
+    resi_map = [i + 1 for i, l in enumerate(alignment.seqB) if l != '-']
+    if alignment.seqA.find('-') == -1:  # the ref seq aligns w/o gaps
+        pass
+    elif not allow_insertions:
+        raise ValueError('There is an insertion in the pose, which is not allowed by attribute `allow_insertions` == False')
+    else:
+        gaps = [i + 1 for i, l in enumerate(alignment.seqA) if l == '-']
+        for start, end in ph.rangify(gaps):
+            resi_map = resi_map[:start] + [(start - 1, letter) for letter in string.ascii_uppercase[:end + 1 - start]] + resi_map[start:]
+
+    pdb_info = pose.pdb_info()
+    chain_resi_offset = -1
+    for resi in ph.pose_range(pose):
+        residue = pose.residue(resi)
+        if residue.chain() != chain_i:
+            continue
+        if chain_resi_offset == -1:
+            chain_resi_offset = resi - 1
+        neoresi = resi_map[resi - chain_resi_offset - 1]
+        if isinstance(neoresi, int):
+            pdb_info.number(resi, neoresi)
+        else: # isinstance(neoresi, tuple)
+            neoresi, icode = neoresi
+            pdb_info.number(resi, neoresi)
+            pdb_info.icode(resi, icode)
+    # ## Output
+    formatted = pairwise2.format_alignment(*alignment)
+    a, gap, b, score = formatted.strip().split('\n')
+    gap = ''.join(['.' if c == '|' else '*' for c in gap])
+    return HTML(f'<div style="font-family:monospace; display: inline-block; white-space: nowrap;">' +
+                f'{a}<br/>{gap.replace(" ", "*")}<br/>{b}<br/>{score}</div>')
+
+def assign_chain_letter(pose, chain_i: int, new_letter: str):
+    """
+    Assign a new letter to chain number ``chain_i``
+    """
+    pdb_info = pose.pdb_info()
+    assert not pdb_info.obsolete(), "pdb info is marked as obsolete"
+    for resi in ph.pose_range(pose):
+        residue = pose.residue(resi)
+        if residue.chain() != chain_i:
+            continue
+        pdb_info.chain(resi, new_letter)
 
 def get_pdbstr(pose):
     buffer = pyrosetta.rosetta.std.stringbuf()
@@ -196,4 +274,31 @@ def pose_range(pose: pyrosetta.Pose, protein_only=True) -> Iterable:
     if protein_only:
         return filter(lambda i: pose.residue(i).is_protein(), all_iter)
     return all_iter
+
+
+def what_is_chain(pose: pyrosetta.Pose, chain: Union[str, int]):
+    """
+    Given a pose and a chain integer or character,
+    return the character or integer of that chain
+
+    :param pose:
+    :param chain: str --> pdb_info based. int --> pyrosetta.Pose based
+    :return:
+    """
+    pdb_info = pose.pdb_info()
+    if isinstance(chain, int):
+        for resi in ph.pose_range(pose):
+            residue = pose.residue(resi)
+            if residue.chain() != chain:
+                continue
+            return pdb_info.chain(resi)
+    elif isinstance(chain, str):
+        for resi in ph.pose_range(pose):
+            if pdb_info.chain(resi) != chain:
+                continue
+            residue = pose.residue(resi)
+            return residue.chain()
+    else:
+        raise TypeError(f'Chain can be int or str not {type(chain)}')
+    raise ValueError(f'No chain {chain}')
 

@@ -83,7 +83,16 @@ class AtomicInteractions:
                                                      for st, s in zip(self.score_types, score)}
         # correct fa_rep for bonded
         for atomname, other_residue_index, other_atomname in self._get_connections():
-            # per_atom[atomname][other_residue_index][other_atomname]['fa_rep'] = float('nan')
+            # [(' C1 ', 59, ' SG '),
+            #  (' C2 ', 59, ' SG '),
+            #  (' H1 ', 59, ' SG '),
+            #  (' H2 ', 59, ' SG '),
+            #  (' C1 ', 59, ' CB '),
+            #  (' C1 ', 59, ' V1 ')]
+            if atomname not in interactions:
+                continue  # virtual
+            if other_atomname not in interactions[atomname][other_residue_index]:
+                continue  # virtual
             del interactions[atomname][other_residue_index][other_atomname]
         # reshape
         reshaped = {(target_atomname, other_resi, atomname): interactions[target_atomname][other_resi][atomname] for
