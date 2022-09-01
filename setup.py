@@ -20,7 +20,7 @@ description = 'A variety of functions to make working with Pyrosetta easier.'
 
 setup(
     name='pyrosetta_help',
-    version='0.5.5',
+    version='0.5.6',
     python_requires='>=3.7',
     packages=find_packages(),
     install_requires=requirements,
