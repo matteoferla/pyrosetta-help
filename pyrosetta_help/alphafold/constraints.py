@@ -135,12 +135,12 @@ def add_stretch_constraint(pose: pyrosetta.Pose,
     :return:
     """
     # get current length
+    if residue_index_B == -1:
+        residue_index_B = pose.total_residue()
     assert pose.residue(residue_index_A).is_protein, f'residue idx {residue_index_A} is not an AA'
     assert pose.residue(residue_index_B).is_protein, f'residue idx {residue_index_B} is not an AA'
     first_ca = pyrosetta.AtomID(atomno_in=pose.residue(residue_index_A).atom_index('CA'),
                                 rsd_in=residue_index_A)
-    if residue_index_B == -1:
-        residue_index_B = pose.total_residue()
     last_ca = pyrosetta.AtomID(atomno_in=pose.residue(residue_index_B).atom_index('CA'),
                                rsd_in=residue_index_B)
     first_ca_xyz = pose.residue(residue_index_A).xyz(first_ca.atomno())
