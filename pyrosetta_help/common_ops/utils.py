@@ -13,7 +13,7 @@ __all__ = ['pose_from_file',
            'what_is_chain']
 
 from collections import Counter
-from typing import (Optional, Tuple, Union, Iterable, Counter, List)
+from typing import (Optional, Tuple, Union, Iterable, List)
 from Bio import pairwise2
 from IPython.display import display, HTML
 import string
