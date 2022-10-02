@@ -5,6 +5,7 @@ or there's a missing dependency that is a different matter.
 """
 
 import argparse
+import subprocess
 import importlib
 import importlib.util
 import os
@@ -56,7 +57,10 @@ def download_pyrosetta(username: Optional[str] = None,
     latest_url = get_latest_release_url(username, password,
                                         wheel=True,
                                         hash_comparison_required=hash_comparison_required)
-    assert not os.system(f'curl {latest_url} | tar -xj -C {path}')
+    process: subprocess.CompletedProcess = subprocess.run(f'curl {latest_url} | tar -xj -C {path}'.split(),
+                                                          capture_output=True)
+    assert not process.returncode, f'PyRosetta download failed (via {latest_url}, error: {process.stderr.decode()}. ' +\
+                                   'Please check your internet connection and try again.'
     pyrosetta_folder = re.sub(r'.tar.\w+$', '', os.path.split(latest_url)[1])
     return os.path.join(path, pyrosetta_folder)
 
@@ -77,7 +81,10 @@ def install_pyrosetta(username: Optional[str] = None,
     # ## local version present?
     path = get_release_path(path)
     if path:
-        assert not os.system(f'yes | pip3 install -e {path}/setup/')
+        process: subprocess.CompletedProcess = subprocess.run(f'yes | pip3 install -e {path}/setup/'.split(),
+                                                                capture_output=True)
+        assert not process.returncode, f'PyRosetta installation failed ({path}, error: {process.stderr.decode()}.'
+        print('PyRosetta installed.')
         site.main()  # refresh
         return
     # ## install by download
@@ -85,7 +92,12 @@ def install_pyrosetta(username: Optional[str] = None,
     latest_url = get_latest_release_url(username, password,
                                         wheel=True,
                                         hash_comparison_required=hash_comparison_required)
-    assert not os.system(f'yes | pip3 install {latest_url}')
+    process: subprocess.CompletedProcess = subprocess.run(f'yes | pip3 install {latest_url}'.split(),
+                                                            capture_output=True)
+    assert not process.returncode, f'PyRosetta installation failed (via {latest_url}, ' +\
+                                   f'error: {process.stderr.decode()}. ' +\
+                                   'Please check your internet connection and try again.'
+    print('PyRosetta installed.')
     site.main()  # refresh
     return
 
