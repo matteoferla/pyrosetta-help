@@ -9,4 +9,7 @@ try:
     from .nglview import nglview
 except ImportError:
     pass
+except Exception as e:
+    print(f'NGlView import failed: {e}')
+    pass
 
