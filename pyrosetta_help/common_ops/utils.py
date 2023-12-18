@@ -14,13 +14,14 @@ __all__ = ['pose_from_file',
 
 from collections import Counter
 from typing import (Optional, Tuple, Union, Iterable, List)
-from Bio import pairwise2
+from Bio.Align import PairwiseAligner, PairwiseAlignments, Alignment
 from IPython.display import display, HTML
 import string
 import numpy as np
 import pandas as pd
 import pyrosetta
 import functools
+from ..threading import rangify
 
 
 def pose_from_file(pdb_filename: str,
@@ -209,25 +210,32 @@ def fix_offset(pose, chain_i: int, ref_sequence: str, allow_insertions:bool=Fals
     pdb_info = pose.pdb_info()
     assert not pdb_info.obsolete(), "pdb info is marked as obsolete"
     # ## Align
-    alignment = pairwise2.align.globalms(ref_sequence,
-                                         pose.chain_sequence(chain_i),
-                                         1, -2,  # penalise mismatches by x2
-                                         -1, -0.5  # penalise extension by 1/2
-                                         )[0]
+    aligner = PairwiseAligner()
+    # Set the scoring
+    aligner.match_score = 1
+    aligner.mismatch_score = -2
+    aligner.open_gap_score = -1
+    aligner.extend_gap_score = -0.5
+    # Perform the alignment
+    alignments: PairwiseAlignments = aligner.align(ref_sequence, pose.chain_sequence(chain_i),)
+    # Assuming you want the best alignment
+    best_alignment: Alignment = alignments[0]
     # this is relative to alignment and not unaligned seqA, so may have gaps if insertions are allowed:
-    resi_map = [i + 1 for i, l in enumerate(alignment.seqB) if l != '-']
-    if alignment.seqA.find('-') == -1:  # the ref seq aligns w/o gaps
+    # Creating the residue map
+    resi_map: List[int] = [i + 1 for i, l in enumerate(best_alignment.aligned[1]) if best_alignment.target[l] != '-']
+    # Check if the ref sequence aligns without gaps
+    if '-' not in best_alignment.target:
         pass
     elif not allow_insertions:
-        raise ValueError('There is an insertion in the pose, which is not allowed by attribute `allow_insertions` == False')
+            raise ValueError('There is an insertion in the pose, which is not allowed by attribute `allow_insertions` == False')
     else:
-        gaps = [i + 1 for i, l in enumerate(alignment.seqA) if l == '-']
-        for start, end in ph.rangify(gaps):
+        gaps = [i + 1 for i, l in enumerate(best_alignment.target) if l == '-']
+        for start, end in rangify(gaps):
             resi_map = resi_map[:start] + [(start - 1, letter) for letter in string.ascii_uppercase[:end + 1 - start]] + resi_map[start:]
 
     pdb_info = pose.pdb_info()
     chain_resi_offset = -1
-    for resi in ph.pose_range(pose):
+    for resi in pose_range(pose):
         residue = pose.residue(resi)
         if residue.chain() != chain_i:
             continue
@@ -241,7 +249,13 @@ def fix_offset(pose, chain_i: int, ref_sequence: str, allow_insertions:bool=Fals
             pdb_info.number(resi, neoresi)
             pdb_info.icode(resi, icode)
     # ## Output
-    formatted = pairwise2.format_alignment(*alignment)
+    a, b = best_alignment.target, best_alignment.query
+    gap_line = ''.join('|' if a[i] == b[i] else ' ' for i in range(len(a)))
+    formatted_gap = ''.join(['.' if c == '|' else '*' for c in gap_line])
+
+    # Create the formatted alignment string
+    # formatted = pairwise2.format_alignment(*alignment)
+    formatted = f"{a}\n{formatted_gap}\n{b}\nScore={best_alignment.score}"
     a, gap, b, score = formatted.strip().split('\n')
     gap = ''.join(['.' if c == '|' else '*' for c in gap])
     return HTML(f'<div style="font-family:monospace; display: inline-block; white-space: nowrap;">' +

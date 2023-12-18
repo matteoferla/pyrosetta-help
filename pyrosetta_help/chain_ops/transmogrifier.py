@@ -1,6 +1,7 @@
 from typing import Tuple, List, Union
 import re
 from .chain_ops import ChainOps
+from Bio.Align import PairwiseAligner
 
 
 class Transmogrifier(ChainOps):
@@ -23,17 +24,19 @@ class Transmogrifier(ChainOps):
         """
         Align the human seq to the mouse and store it the chain dict
         """
-        from Bio import pairwise2
         chain = self.chains[chain_selection]
-        alignments = pairwise2.align.globalxs(chain[f'{self.wanted_label}_sequence'],
-                                              chain[f'{self.owned_label}_sequence'],
-                                              -1,  # open
-                                              -0.1  # extend
-                                              )
-        al = alignments[0]
-        chain[f'{self.wanted_label}_aln_sequence'] = al[0]
-        chain[f'{self.owned_label}_aln_sequence'] = al[1]
-        return al[0], al[1]
+        wanted_sequence = chain[f'{self.wanted_label}_sequence']
+        owned_sequence = chain[f'{self.owned_label}_sequence']
+        # Align using PairwiseAligner
+        aligner = PairwiseAligner()
+        aligner.open_gap_score = -1  # Gap open penalty
+        aligner.extend_gap_score = -0.1  # Gap extension penalty
+        # Perform the alignment
+        alignment = aligner.align(wanted_sequence, owned_sequence)[0]  # Assuming the best alignment
+        # Get the aligned sequences
+        aligned_wanted = ''.join(wanted_sequence[i] if i != -1 else '-' for i in alignment.aligned[0])
+        aligned_owned = ''.join(owned_sequence[i] if i != -1 else '-' for i in alignment.aligned[1])
+        return aligned_wanted, aligned_owned
 
     def covert_A2B(self, seqA: str, seqB: str, resiA: int) -> int:
         """

@@ -8,15 +8,25 @@ __all__ = ['get_alignment', 'write_grishin', 'thread', 'rangify', 'steal_ligands
 
 def get_alignment(target: str, template: str) -> Dict[str, str]:
     """
-    Returns alignments using ``pairwise2.align.globalxs``
+    Returns alignments using ``PairwiseAligner``, formerly was using ``pairwise2.align.globalxs``
     """
-    from Bio import pairwise2
-    alignments = pairwise2.align.globalxs(target,
-                                          template,
-                                          -1,  # open
-                                          -0.1  # extend
-                                          )
-    return dict(zip(['target', 'template', 'score', 'begin', 'end'], alignments[0]))
+    from Bio.Align import PairwiseAligner
+    aligner = PairwiseAligner()
+    aligner.open_gap_score = -1
+    aligner.extend_gap_score = -0.1
+    # Perform the alignment
+    alignments = aligner.align(target, template)
+    # Assuming you want the best alignment
+    best_alignment = alignments[0]
+    # Extracting relevant information
+    alignment_info = {
+        'target': best_alignment.aligned[0],
+        'template': best_alignment.aligned[1],
+        'score': best_alignment.score,
+        'begin': best_alignment.path[0][0],
+        'end': best_alignment.path[-1][0]
+    }
+    return alignment_info
 
 
 def write_grishin(target_name, target_sequence, template_name, template_sequence, outfile):

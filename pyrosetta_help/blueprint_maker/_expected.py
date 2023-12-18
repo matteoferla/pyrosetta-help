@@ -1,5 +1,7 @@
 from typing import List
 import pyrosetta
+from Bio.Align import PairwiseAligner, PairwiseAlignments, Alignment
+from IPython.display import display, HTML
 
 class BlueprinterExpected:
     def expected_seq(self):
@@ -33,15 +35,21 @@ class BlueprinterExpected:
         """
         self.show_seq_aligned(pose.sequence(), self.expected_seq())
 
-    def _show_alignment(self, alignment: list) -> None:
-        from Bio import pairwise2
-        from IPython.display import display, HTML
-        formatted = pairwise2.format_alignment(*alignment)
-        a, gap, b, score = formatted.strip().split('\n')
-        gap = ''.join(['.' if c == '|' else '*' for c in gap])
-        display(HTML(f'<div style="font-family:monospace; display: inline-block; white-space: nowrap;">'+
-                     f'{a}<br/>{gap.replace(" ", "*")}<br/>{b}<br/>{score}</div>'))
-        #ignore pycharm. typehint for display is wrong.
+    def _show_alignment(self, alignment: Alignment) -> None:
+        """
+        Display the formatted alignment.
+        """
+        # Extract aligned sequences
+        a = ''.join(alignment.target[i] if i != -1 else '-' for i in alignment.aligned[0])
+        b = ''.join(alignment.query[i] if i != -1 else '-' for i in alignment.aligned[1])
+        # Create a gap line
+        gap_line = ''.join('|' if a[i] == b[i] else ' ' for i in range(len(a)))
+        formatted_gap = ''.join(['.' if c == '|' else '*' for c in gap_line])
+        # Format the score
+        score = f"Score={alignment.score}"
+        # Display the formatted alignment
+        display(HTML(f'<div style="font-family:monospace; display: inline-block; white-space: nowrap;">' +
+                     f'{a}<br/>{formatted_gap}<br/>{b}<br/>{score}</div>'))
 
     def show_poses_aligned(self, pose_A, pose_B):
         """
@@ -49,14 +57,19 @@ class BlueprinterExpected:
         """
         self.show_seq_aligned(pose_A.sequence(), pose_B.sequence())
 
-    def show_seq_aligned(self, seq_A: str, seq_B:str) -> List[str]:
+    def show_seq_aligned(self, seq_A: str, seq_B:str) -> List[Alignment]:
         """
         Show the alignment of two sequences.
         """
-        from Bio import pairwise2
-        alignment = pairwise2.align.globalxx(seq_A, seq_B)[0]
-        self._show_alignment(alignment)
-        return alignment
+        # Align using PairwiseAligner
+        aligner = PairwiseAligner()
+        alignments: PairwiseAlignments = aligner.align(seq_A, seq_B)
+        # Assuming you want the best alignment
+        best_alignment: Alignment = alignments[0]
+
+        # Call _show_alignment to display the alignment
+        self._show_alignment(best_alignment)
+        return [best_alignment]
 
     def correct(self, pose: pyrosetta.Pose) -> pyrosetta.rosetta.core.select.residue_selector.ResidueSelector:
         """

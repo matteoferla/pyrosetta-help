@@ -11,6 +11,7 @@ from ..common_ops.downloads import download_pdb
 from .load import parameterized_pose_from_file, parameterized_pose_from_pdbblock
 from io import IOBase  # just for an isinstance fh
 import warnings
+from Bio.Align import PairwiseAligner
 
 pr_rs = pyrosetta.rosetta.core.select.residue_selector
 
@@ -225,21 +226,24 @@ class LigandNicker:
         Given a list of indices for one pose, return their aligned equivalents in the second.
         Modded to be donor_pose --> acceptor_pose
         """
-        from Bio import pairwise2
         acc_ch_idx = chain_letter_to_number(self.acceptor_chain, self.acceptor_pose)
         don_ch_idx = chain_letter_to_number(self.donor_chain, self.donor_pose)
         acc_seq = self.acceptor_pose.chain_sequence(acc_ch_idx)
         don_seq = self.donor_pose.chain_sequence(don_ch_idx)
-        alignments = pairwise2.align.globalxs(acc_seq,
-                                              don_seq,
-                                              -1,  # open
-                                              -0.1  # extend
-                                              )
-        alignments = dict(zip(['target', 'template', 'score', 'begin', 'end'], alignments[0]))
-
-        donor_pose_to_msa_mapping = self._make_map(alignments['template'],
+        aligner = PairwiseAligner()
+        aligner.open_gap_score = -1  # open
+        aligner.extend_gap_score = -0.1  # extend
+        alignment = aligner.align(acc_seq, don_seq)[0]
+        alignment_parts = {
+            'target': alignment.aligned[0],  # Aligned positions in acceptor
+            'template': alignment.aligned[1],  # Aligned positions in donor
+            'score': alignment.score,
+            'begin': alignment.path[0][0],
+            'end': alignment.path[-1][0]
+        }
+        donor_pose_to_msa_mapping = self._make_map(alignment_parts['template'],
                                                    self.donor_pose.chain_begin(don_ch_idx))
-        acceptor_pose_to_msa_mapping = self._make_map(alignments['target'],
+        acceptor_pose_to_msa_mapping = self._make_map(alignment_parts['target'],
                                                       self.acceptor_pose.chain_begin(acc_ch_idx))
         msa_to_acceptor_pose_mapping = dict(zip(acceptor_pose_to_msa_mapping.values(),
                                                 acceptor_pose_to_msa_mapping.keys()))
