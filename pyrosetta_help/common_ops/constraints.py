@@ -117,17 +117,17 @@ def get_AtomID_by_NGL_sele(pose: pyrosetta.Pose, selection: str) -> pyrosetta.At
         raise ValueError('single atom selection')
     # chain
     if ':' in selection:
-        chain = re.match(r':(\w)', selection).group(1)
+        chain = re.search(r':(\w)', selection).group(1)
     else:
         chain = 'A'
     # atom name
     if ':' in selection:
-        name = re.match(r'\.(\w+)', selection).group(1)
+        name = re.search(r'\.(\w+)', selection).group(1)
     else:
         name = ''
     # residue name
     if '[' in selection:
-        resn = re.match(r'\[(\w+)]', selection).group(1)
+        resn = re.search(r'\[(\w+)]', selection).group(1)
     else:
         resn = ''
     # residue index

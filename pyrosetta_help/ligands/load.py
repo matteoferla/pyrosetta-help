@@ -29,12 +29,13 @@ def parameterized_pose_from_file(pdb_filename,
                                  save_params: bool = True,
                                  overriding_params=()) -> pyrosetta.Pose:
     """
-    pose loading, the circutous way to not loose ligand or use PDB_component.
+    pose loading, the circutous way to not lose ligand or use PDB_component.
     Assumes all mystery components are PDB residues.
     Works best with ignore_unrecognized_res False
 
     :param pdb_filename:
-    :param wanted_ligands: a list of three letter codes or a dictionary of three letter codes to None or smiles
+    :param wanted_ligands: a list of three-letter codes (PDB chemcomponent identifiers)
+                          or a dictionary of three-letter codes to None or smiles
     :param force_parameterisation:
     :param neutralize_params: protonated for pH 7
     :param save_params:

@@ -9,11 +9,10 @@ in order to make tab completion work, see a ``DBEntry`` instance for more.
     from pyrosetta_help.database import database, residue_types, patches 
 """
 
-
-import pkg_resources
 import os
 import pkg_resources
 from typing import List
+import pyrosetta
 
 
 class DBEntry:
