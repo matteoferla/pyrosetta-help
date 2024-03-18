@@ -34,8 +34,8 @@ class Transmogrifier(ChainOps):
         # Perform the alignment
         alignment = aligner.align(wanted_sequence, owned_sequence)[0]  # Assuming the best alignment
         # Get the aligned sequences
-        aligned_wanted = ''.join(wanted_sequence[i] if i != -1 else '-' for i in alignment.aligned[0])
-        aligned_owned = ''.join(owned_sequence[i] if i != -1 else '-' for i in alignment.aligned[1])
+        aligned_wanted = ''.join(wanted_sequence[i] if i != -1 else '-' for i in alignment.indices[0])
+        aligned_owned = ''.join(owned_sequence[i] if i != -1 else '-' for i in alignment.indices[1])
         return aligned_wanted, aligned_owned
 
     def covert_A2B(self, seqA: str, seqB: str, resiA: int) -> int:

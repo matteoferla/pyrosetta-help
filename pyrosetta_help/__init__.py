@@ -1,4 +1,4 @@
-from .installer import install_pyrosetta, check_pyrosetta, download_pyrosetta
+from .installer import install_pyrosetta, check_pyrosetta, download_pyrosetta, get_latest_release_url
 from .colab_ops import *  # has __all__
 if check_pyrosetta():
     from .weights import WeightWatcher
