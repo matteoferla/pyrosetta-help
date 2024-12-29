@@ -71,6 +71,9 @@ def pose2pandas(pose: pyrosetta.Pose, scorefxn: pyrosetta.ScoreFunction) -> pd.D
     :param pose:
     :return:
     """
+    # monkey patching to make old pyrosetta code work
+    if not hasattr(np, 'alltrue'):
+        np.alltrue = np.all
     pose.energies().clear_energies()
     scorefxn.weights() # neccessary?
     emopts = pyrosetta.rosetta.core.scoring.methods.EnergyMethodOptions(scorefxn.energy_method_options())
@@ -81,7 +84,7 @@ def pose2pandas(pose: pyrosetta.Pose, scorefxn: pyrosetta.ScoreFunction) -> pd.D
     pi = pose.pdb_info()
     scores['residue'] = scores.index.to_series() \
         .apply(lambda r: pose.residue(r + 1) \
-               .name1() + pi.pose2pdb(r + 1)
+               .name1() + pi.pose2pdb(r + 1).strip().replace(' ', ':')
                )
     return scores
 
