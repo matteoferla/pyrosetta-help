@@ -3,7 +3,7 @@ There is likely a mover that does this already and better...
 """
 
 
-def make_ss(pose, begin: int = 1, end: int = -1, phi: float = 180, psi: float = 180):
+def make_ss(pose, begin: int = 1, end: int = -1, phi: float = 180, psi: float = 180, omega: float = 180):
     """
     Given a pose, likely one made via ``pyrosetta.pose_from_sequence``,
     make the fortran-indexed range [begin, end] (inclusive) into that SS.
@@ -13,6 +13,7 @@ def make_ss(pose, begin: int = 1, end: int = -1, phi: float = 180, psi: float = 
     for r in range(begin, end + 1):
         pose.set_phi(r, phi)
         pose.set_psi(r, psi)
+        pose.set_omega(r, omega)
 
 
 def make_alpha_helical(pose, begin: int = 1, end: int = -1):

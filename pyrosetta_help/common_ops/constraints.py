@@ -14,6 +14,18 @@ __all__ = ['get_NGL_selection_from_AtomID',
            'print_bad_constraint_scores',
            'constraints2pandas']
 
+def _get_cons(pose):
+    """
+    KofNConstraint and others are nested. This splits them up
+    """
+    cons = []
+    cs = pose.constraint_set()
+    for con in cs.get_all_constraints():
+        if hasattr(con, 'member_constraints'):
+            cons.extend(con.member_constraints())
+        else:
+            cons.append(con)
+    return con
 
 def get_NGL_selection_from_AtomID(pose: pyrosetta.Pose, atom_id: pyrosetta.AtomID, named: bool = False):
     """
@@ -43,8 +55,14 @@ def print_constraint_score(pose: pyrosetta.Pose, con):
     :param con:
     :return:
     """
-    data = get_constraint_score_data(pose, con)
-    print('{constraint_name}: {atom_A} – {atom_B} {function_name}={funpart} --> {score:.2}'.format(**data))
+    if hasattr(con, 'member_constraints'):
+        print(f'Nested: {con.__class__.__name__}')
+        cons = con.member_constraints()
+    else:
+        cons = [con]
+    for con in cons:
+        data = get_constraint_score_data(pose, con)
+        print('{constraint_name}: {atom_A} – {atom_B} {function_name}={funpart} --> {score:.2}'.format(**data))
 
 
 def get_constraint_score_data(pose: pyrosetta.Pose, con) -> dict:
@@ -56,16 +74,21 @@ def get_constraint_score_data(pose: pyrosetta.Pose, con) -> dict:
     :return:
     """
     atoms = [get_NGL_selection_from_AtomID(pose, con.atom(i)) for i in range(1, con.natoms())]
-    fun = con.get_func()
-    if hasattr(fun, 'x0') and hasattr(fun, 'sd'):
-        funpart = f'{fun.x0():.2f}/{fun.sd():.2f}'
-    elif hasattr(fun, 'x0'):
-        funpart = f'{fun.x0():.2f}'
-    else:
-        funpart = f'NA'
+    try:
+        fun = con.get_func()
+        function_name = fun.__class__.__name__
+        if hasattr(fun, 'x0') and hasattr(fun, 'sd'):
+            funpart = f'{fun.x0():.2f}/{fun.sd():.2f}'
+        elif hasattr(fun, 'x0'):
+            funpart = f'{fun.x0():.2f}'
+        else:
+            funpart = 'NA'
+    except RuntimeError:
+        function_name= 'unknown'
+        funpart = 'NA'
     score = con.score(pose)
     info = dict(constraint_name=con.__class__.__name__,
-                function_name=fun.__class__.__name__,
+                function_name=function_name,
                 funpart=funpart,
                 score=score
                 )
@@ -88,16 +111,14 @@ def print_constraint_scores(pose: pyrosetta.Pose):
 
 def constraints2pandas(pose):
     import pandas as pd
-    cs = pose.constraint_set()
     rows = []
-    for con in cs.get_all_constraints():
+    for con in _get_cons(pose):
         rows.append(get_constraint_score_data(pose, con))
     return pd.DataFrame(rows).fillna('')
 
 
 def print_bad_constraint_scores(pose, cutoff=0.5):
-    cs = pose.constraint_set()
-    for con in cs.get_all_constraints():
+    for con in _get_cons(pose):
         data = get_constraint_score_data(pose, con)
         if data['score'] > cutoff:
             print('{constraint_name}: {atom_A} – {atom_B} {function_name}={funpart} --> {score:.2}'.format(**data))
@@ -159,7 +180,7 @@ def get_AtomID_from_pymol_line(pose: pyrosetta.Pose, line: Optional[str] = None)
     if line is None:
         import xerox
         line = xerox.paste()
-    rex = re.search(r'\/\w+/\w?/(\w)/\w{3}`(\d+)/(\w+) ', line)
+    rex = re.search(r'\/[\w_]+/\w?/(\w)/\w{3}`(\d+)/(\w+)', line)
     chain, res, atomname = rex.groups()
     return get_AtomID(pose, chain, int(res), atomname)
 
