@@ -20,7 +20,7 @@ description = 'A variety of functions to make working with Pyrosetta easier.'
 
 setup(
     name='pyrosetta_help',
-    version='0.5.10',
+    version='0.5.11',
     python_requires='>=3.7',
     packages=find_packages(),
     install_requires=requirements,
@@ -29,7 +29,7 @@ setup(
     author='Matteo Ferla',
     author_email='matteo.ferla@gmail.com',
     classifiers=[ # https://pypi.org/classifiers/
-        'Development Status :: 4 - Beta', # Development Status :: 5 - Production/Stable
+        'Development Status :: 5 - Production/Stable', # Development Status :: 5 - Production/Stable
         'Intended Audience :: Science/Research',
         'Topic :: Scientific/Engineering :: Bio-Informatics',
         'Topic :: Scientific/Engineering :: Chemistry',
@@ -37,6 +37,8 @@ setup(
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
     ],
     description=description,
     long_description=__doc__,

@@ -1,3 +1,4 @@
+import _legacy # monkey patches for legacy compatibility for numpy and Bio.Align with PyRosetta
 from .installer import install_pyrosetta, check_pyrosetta, download_pyrosetta, get_latest_release_url
 from .colab_ops import *  # has __all__
 if check_pyrosetta():
