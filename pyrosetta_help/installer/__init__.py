@@ -6,7 +6,6 @@ or there's a missing dependency that is a different matter.
 
 import argparse
 import subprocess
-import pip
 from pip._internal.cli.main import main as pip_main
 import importlib
 import importlib.util
